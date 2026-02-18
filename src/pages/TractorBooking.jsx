@@ -198,8 +198,12 @@ const TractorBooking = () => {
                     }
                 },
                 (error) => {
-                    console.error(error);
-                    toast.error("Could not fetch location.");
+                    console.warn("GPS Error:", error.message);
+                    if (error.code === 1) {
+                        toast.warn("GPS Access Denied. Please enter location manually.");
+                    } else {
+                        toast.error("Could not fetch location. Try again.");
+                    }
                 }
             );
         } else {
@@ -312,7 +316,7 @@ const TractorBooking = () => {
                         initial={{ y: '100%' }}
                         animate={{ y: 0 }}
                         exit={{ y: '100%' }}
-                        className="absolute bottom-0 left-0 right-0 z-20 bg-white dark:bg-slate-900 rounded-t-[2.5rem] p-6 shadow-2xl border-t border-slate-200 dark:border-slate-800"
+                        className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 rounded-t-[2.5rem] p-6 shadow-2xl border-t border-slate-200 dark:border-slate-800"
                     >
                         <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-6"></div>
                         <div className="flex items-center gap-3 mb-6 px-2">
@@ -325,7 +329,7 @@ const TractorBooking = () => {
                             </div>
                         </div>
 
-                        <div className="space-y-3 mb-6 max-h-[40vh] overflow-y-auto">
+                        <div className="space-y-3 mb-6 max-h-[60vh] overflow-y-auto">
                             {selectedCategory.machines.map(v => (
                                 <button
                                     key={v.id}
@@ -357,7 +361,7 @@ const TractorBooking = () => {
                         initial={{ y: '100%' }}
                         animate={{ y: 0 }}
                         exit={{ y: '100%' }}
-                        className="absolute bottom-0 left-0 right-0 z-20 bg-white dark:bg-slate-900 rounded-t-[2.5rem] p-6 shadow-2xl border-t border-slate-200 dark:border-slate-800"
+                        className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 rounded-t-[2.5rem] p-6 shadow-2xl border-t border-slate-200 dark:border-slate-800"
                     >
                         <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-6"></div>
                         <div className="flex items-center gap-3 mb-6 px-2">
@@ -395,7 +399,11 @@ const TractorBooking = () => {
                                 </div>
                                 <div className="flex-1 text-left">
                                     <h4 className="font-bold text-lg text-amber-700 dark:text-amber-400">Kisan Credit / Pay Later</h4>
-                                    <p className="text-xs text-amber-600/70 dark:text-amber-400/70">Pay after harvest (0% Interest)</p>
+                                    <p className="text-xs text-amber-600/70 dark:text-amber-400/70">
+                                        Pay within 6 Months (0% Interest).
+                                        <br />
+                                        <span className="text-[10px] text-red-500 font-bold">*After 6 months, 2% monthly interest applies.</span>
+                                    </p>
                                 </div>
                                 <div className="w-6 h-6 rounded-full border-2 border-amber-300 group-hover:border-amber-500 group-hover:bg-amber-500 transition-colors"></div>
                             </button>
@@ -407,7 +415,7 @@ const TractorBooking = () => {
             {/* Stage 5: Finding Animation */}
             <AnimatePresence>
                 {stage === 'finding' && (
-                    <motion.div className="absolute inset-0 z-30 bg-black/60 backdrop-blur-sm flex items-center justify-center">
+                    <motion.div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center">
                         <motion.div
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
@@ -438,7 +446,7 @@ const TractorBooking = () => {
                     <motion.div
                         initial={{ y: '100%' }}
                         animate={{ y: 0 }}
-                        className="absolute bottom-0 left-0 right-0 z-20 bg-white dark:bg-slate-900 rounded-t-[2.5rem] p-6 shadow-2xl border-t border-slate-200 dark:border-slate-800"
+                        className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 rounded-t-[2.5rem] p-6 shadow-2xl border-t border-slate-200 dark:border-slate-800"
                     >
                         <div className="flex items-center justify-between mb-6">
                             <div>
@@ -493,7 +501,7 @@ const TractorBooking = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 z-50 bg-black/60 backdrop-blur-md flex items-end md:items-center justify-center p-4"
+                        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-end md:items-center justify-center p-4"
                     >
                         <motion.div
                             initial={{ y: 100 }}
@@ -553,7 +561,7 @@ const TractorBooking = () => {
             {/* Stage 7: Receipt Modal */}
             <AnimatePresence>
                 {stage === 'completed' && (
-                    <motion.div className="absolute inset-0 z-30 bg-black/80 backdrop-blur-md flex items-center justify-center p-6">
+                    <motion.div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-6">
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}

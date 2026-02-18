@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Circle } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { toast } from 'react-toastify';
 
 import {
     MapPin, Navigation, Signal, Wifi, Activity,
@@ -142,11 +143,15 @@ const GpsMap = ({ activeTrack = null }) => {
                 },
                 (error) => {
                     console.error("GPS Error", error);
+                    // Fallback to Bhubaneswar if denied
+                    setUserLocation({ lat: 20.2961, lng: 85.8245, name: 'Bhubaneswar (Default)' });
                     setLocating(false);
+                    toast.warn("GPS Denied: Using default location");
                 }
             );
         } else {
             setLocating(false);
+            toast.error("GPS not supported by browser");
         }
     };
 
@@ -177,9 +182,9 @@ const GpsMap = ({ activeTrack = null }) => {
     };
 
     return (
-        <div className="relative w-full h-[600px] bg-slate-50 dark:bg-slate-950 rounded-[40px] overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl z-0">
+        <div className="relative w-full h-[400px] md:h-[600px] bg-slate-50 dark:bg-slate-950 rounded-[30px] md:rounded-[40px] overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl z-0">
             {/* Enhanced HUD Overlay */}
-            <div className="absolute top-6 left-6 z-[400] space-y-2 pointer-events-none"> {/* higher z-index for leaflet */}
+            <div className="absolute top-4 left-4 md:top-6 md:left-6 z-[400] space-y-2 pointer-events-none"> {/* higher z-index for leaflet */}
                 <div className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 backdrop-blur-md px-4 py-2 rounded-xl text-white text-[10px] font-black uppercase tracking-widest border border-white/20 shadow-lg pointer-events-auto">
                     <Signal className="w-3 h-3 animate-pulse" /> Gov Services Active
                 </div>

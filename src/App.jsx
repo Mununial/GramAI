@@ -19,6 +19,7 @@ import FinancialPlanning from './pages/FinancialPlanning';
 import FarmCalculator from './pages/FarmCalculator';
 import FarmingSolutions from './pages/FarmingSolutions';
 import AgriMarket from './pages/AgriMarket';
+import LandLease from './pages/LandLease';
 
 const ProtectedRoute = ({ children, roles = [] }) => {
   const { user, loading } = useAuth();
@@ -146,6 +147,12 @@ function App() {
               <Route path="/agri-market" element={
                 <ProtectedRoute>
                   <AgriMarket />
+                </ProtectedRoute>
+              } />
+
+              <Route path="/land-lease" element={
+                <ProtectedRoute>
+                  <LandLease />
                 </ProtectedRoute>
               } />
             </Routes>

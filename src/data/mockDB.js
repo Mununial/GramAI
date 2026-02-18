@@ -151,3 +151,103 @@ export const reviews = Array.from({ length: 50 }).map((_, i) => ({
     comment: getRandom(["Excellent service!", "Very punctual and professional.", "Tractor condition was great.", "Highly recommended for village services.", "The AI scan was very accurate."]),
     date: getRandomDate(new Date(2025, 1, 1), new Date()),
 }));
+// ... existing exports ...
+
+export const cropEstimates = [
+    {
+        id: 'paddy',
+        name: { english: 'Paddy (Rice)', odia: 'ଧାନ', hindi: 'धान' },
+        duration: '120-150 days',
+        avgYield: 22,
+        msp: 2203,
+        details: {
+            seeds: { qty: 20, unit: 'kg', rate: 60, desc: 'High yielding variety' },
+            fertilizer: { qty: 150, unit: 'kg', rate: 25, desc: 'DAP (50kg) + Urea (100kg)' },
+            pesticide: { qty: 2.5, unit: 'L', rate: 800, desc: 'Weedicide & Insecticide' },
+            labor: { qty: 15, unit: 'days', rate: 400, desc: 'Sowing to Harvesting' },
+            irrigation: { qty: 6, unit: 'cycles', rate: 500, desc: 'Pump set fuel/charges' },
+            machinery: { qty: 3, unit: 'hrs', rate: 1000, desc: 'Tractor for ploughing' },
+            other: { qty: 1, unit: 'LS', rate: 1500, desc: 'Transport & Storage' }
+        }
+    },
+    {
+        id: 'wheat',
+        name: { english: 'Wheat', odia: 'ଗହମ', hindi: 'गेहूं' },
+        duration: '100-120 days',
+        avgYield: 18,
+        msp: 2275,
+        details: {
+            seeds: { qty: 40, unit: 'kg', rate: 45, desc: 'Certified Wheat Seeds' },
+            fertilizer: { qty: 120, unit: 'kg', rate: 30, desc: 'NPK Mix' },
+            pesticide: { qty: 1.5, unit: 'L', rate: 900, desc: 'Fungicides' },
+            labor: { qty: 10, unit: 'days', rate: 400, desc: 'Manual Weeding/Harvest' },
+            irrigation: { qty: 4, unit: 'cycles', rate: 600, desc: 'Critical stages' },
+            machinery: { qty: 4, unit: 'hrs', rate: 1000, desc: 'Rotavator/Thresher' },
+            other: { qty: 1, unit: 'LS', rate: 1200, desc: 'Gunny bags/Misc' }
+        }
+    },
+    {
+        id: 'cotton',
+        name: { english: 'Cotton', odia: 'କପା', hindi: 'कपास' },
+        duration: '150-180 days',
+        avgYield: 12,
+        msp: 6620,
+        details: {
+            seeds: { qty: 2, unit: 'pkt', rate: 850, desc: 'Bt Cotton Seeds' },
+            fertilizer: { qty: 200, unit: 'kg', rate: 35, desc: 'Complex Fertilizers' },
+            pesticide: { qty: 5, unit: 'L', rate: 1200, desc: 'Bollworm control' },
+            labor: { qty: 25, unit: 'days', rate: 400, desc: 'Picking (Labor intensive)' },
+            irrigation: { qty: 8, unit: 'cycles', rate: 500, desc: 'Drip/Flow' },
+            machinery: { qty: 2, unit: 'hrs', rate: 1200, desc: 'Land Prep' },
+            other: { qty: 1, unit: 'LS', rate: 2000, desc: 'Marketing costs' }
+        }
+    },
+    {
+        id: 'sugarcane',
+        name: { english: 'Sugarcane', odia: 'ଆଖୁ', hindi: 'गन्ना' },
+        duration: '300-360 days',
+        avgYield: 400, // tons? No quintals usually around 300-400
+        msp: 340, // FRP per quintal
+        details: {
+            seeds: { qty: 30, unit: 'qtl', rate: 400, desc: 'Seed Setts' },
+            fertilizer: { qty: 300, unit: 'kg', rate: 25, desc: 'Heavy feeder' },
+            pesticide: { qty: 4, unit: 'L', rate: 700, desc: 'Borers control' },
+            labor: { qty: 40, unit: 'days', rate: 450, desc: 'Planting to Harvest' },
+            irrigation: { qty: 15, unit: 'cycles', rate: 400, desc: 'Year-round water' },
+            machinery: { qty: 5, unit: 'hrs', rate: 1200, desc: 'Deep ploughing' },
+            other: { qty: 1, unit: 'LS', rate: 5000, desc: 'Transport to Mill' }
+        }
+    },
+    {
+        id: 'vegetables',
+        name: { english: 'Vegetables (Mix)', odia: 'ପରିବା', hindi: 'सब्जियां' },
+        duration: '60-90 days',
+        avgYield: 80,
+        msp: 1500, // Market estimate
+        details: {
+            seeds: { qty: 500, unit: 'g', rate: 3, desc: 'Hybrid Seeds (rate/g)' }, // 3*500 = 1500
+            fertilizer: { qty: 100, unit: 'kg', rate: 40, desc: 'Organic/Chemical' },
+            pesticide: { qty: 2, unit: 'L', rate: 1000, desc: 'Bio-pesticides' },
+            labor: { qty: 20, unit: 'days', rate: 400, desc: 'Frequent weeding/picking' },
+            irrigation: { qty: 10, unit: 'cycles', rate: 300, desc: 'Drip irrigation' },
+            machinery: { qty: 2, unit: 'hrs', rate: 1000, desc: 'Bed making' },
+            other: { qty: 1, unit: 'LS', rate: 2000, desc: 'Crates/Packaging' }
+        }
+    },
+    {
+        id: 'groundnut',
+        name: { english: 'Groundnut', odia: 'ଚିନାବାଦାମ', hindi: 'मूंगफली' },
+        duration: '100-120 days',
+        avgYield: 8,
+        msp: 6377,
+        details: {
+            seeds: { qty: 60, unit: 'kg', rate: 90, desc: 'Kernels' },
+            fertilizer: { qty: 80, unit: 'kg', rate: 30, desc: 'SSP + Gypsum' },
+            pesticide: { qty: 1, unit: 'L', rate: 800, desc: 'Leaf spot control' },
+            labor: { qty: 12, unit: 'days', rate: 400, desc: 'Digging/Plucking' },
+            irrigation: { qty: 3, unit: 'cycles', rate: 500, desc: 'If rainfed less' },
+            machinery: { qty: 2, unit: 'hrs', rate: 1000, desc: 'Ploughing' },
+            other: { qty: 1, unit: 'LS', rate: 1000, desc: 'Drying' }
+        }
+    }
+];

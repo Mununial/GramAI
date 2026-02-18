@@ -19,7 +19,8 @@ import {
     FileText,
     Calculator,
     ShoppingBag,
-    Users
+    Users,
+    Warehouse
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -43,8 +44,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         { name: 'Reports', icon: FileText, path: '/admin/reports', roles: ['admin'] },
         { name: 'System Settings', icon: Settings, path: '/admin/settings', roles: ['admin'] },
 
-        { name: lang === 'or' ? 'ଚାଷ ହିସାବ' : 'Farm Calculator', icon: Calculator, path: '/farm-calculator', roles: ['farmer'] },
         { name: t('rentTractor'), icon: Tractor, path: '/tractors', roles: ['farmer'] },
+        { name: 'Land Lease', icon: Warehouse, path: '/land-lease', roles: ['farmer'] },
         { name: t('services'), icon: Wrench, path: '/services', roles: ['farmer'] },
         { name: 'Govt Schemes', icon: Landmark, path: '/government-schemes', roles: ['farmer'] },
         { name: 'Money Manager', icon: Calculator, path: '/financial-planning', roles: ['farmer'] },

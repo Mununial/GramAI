@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { jsPDF } from 'jspdf';
+import { cropEstimates } from '../data/mockDB';
 import {
     Calculator, Volume2, Languages, ChevronRight, ChevronLeft,
     Sprout, Wheat, Carrot, IndianRupee, TrendingUp, AlertCircle,
@@ -25,32 +26,32 @@ const FarmCalculator = () => {
     const [calculations, setCalculations] = useState(null);
 
     // Mock Data
-    const crops = [
-        {
-            id: 'paddy',
-            name: { english: 'Paddy (Rice)', odia: 'ଧାନ', hindi: 'धान' },
-            icon: Sprout,
-            color: 'bg-green-100 text-green-600',
-            duration: '120-150 days',
-            avgYield: 20 // quintal per acre
-        },
-        {
-            id: 'wheat',
-            name: { english: 'Wheat', odia: 'ଗହମ', hindi: 'गेहूं' },
-            icon: Wheat,
-            color: 'bg-amber-100 text-amber-600',
-            duration: '100-120 days',
-            avgYield: 18
-        },
-        {
-            id: 'vegetables',
-            name: { english: 'Vegetables', odia: 'ପରିବା', hindi: 'सब्जियां' },
-            icon: Carrot,
-            color: 'bg-orange-100 text-orange-600',
-            duration: '60-90 days',
-            avgYield: 50
-        }
-    ];
+    // Mock Data Integration
+    const getIcon = (id) => {
+        const icons = {
+            paddy: Sprout, wheat: Wheat, vegetables: Carrot,
+            cotton: Sprout, sugarcane: Sprout, groundnut: Sprout
+        };
+        return icons[id] || Sprout;
+    };
+
+    const getColor = (id) => {
+        const colors = {
+            paddy: 'bg-green-100 text-green-600',
+            wheat: 'bg-amber-100 text-amber-600',
+            vegetables: 'bg-orange-100 text-orange-600',
+            cotton: 'bg-blue-100 text-blue-600',
+            sugarcane: 'bg-lime-100 text-lime-600',
+            groundnut: 'bg-yellow-100 text-yellow-600'
+        };
+        return colors[id] || 'bg-slate-100 text-slate-600';
+    };
+
+    const crops = cropEstimates.map(crop => ({
+        ...crop,
+        icon: getIcon(crop.id),
+        color: getColor(crop.id)
+    }));
 
     const handleCalculate = () => {
         if (!selectedCrop || !acreage) {
@@ -61,21 +62,22 @@ const FarmCalculator = () => {
         const acres = parseFloat(acreage);
         const cropData = crops.find(c => c.id === selectedCrop);
 
-        // Basic Cost Assumptions (Per Acre)
-        const costsPerAcre = {
-            seeds: 1200,
-            fertilizer: 3500,
-            pesticide: 1500,
-            labor: 5000,
-            irrigation: 2000,
-            other: 1000
-        };
+        // Calculate costs dynamically from details
+        const costsPerAcre = {};
+        const costBreakdown = {};
+        let totalCostPerAcre = 0;
 
-        const totalCostPerAcre = Object.values(costsPerAcre).reduce((a, b) => a + b, 0);
+        Object.entries(cropData.details).forEach(([key, val]) => {
+            const cost = val.qty * val.rate;
+            costsPerAcre[key] = cost;
+            costBreakdown[key] = cost * acres;
+            totalCostPerAcre += cost;
+        });
+
         const totalCost = totalCostPerAcre * acres;
 
         // Income Assumptions
-        const pricePerQuintal = selectedCrop === 'paddy' ? 2200 : selectedCrop === 'wheat' ? 2400 : 3000; // MSP approx
+        const pricePerQuintal = cropData.msp || 2000;
         const yieldPerAcre = cropData.avgYield;
         const totalYield = yieldPerAcre * acres;
         const totalIncome = totalYield * pricePerQuintal;
@@ -85,14 +87,8 @@ const FarmCalculator = () => {
         setCalculations({
             crop: selectedCrop,
             acres,
-            costs: {
-                seeds: costsPerAcre.seeds * acres,
-                fertilizer: costsPerAcre.fertilizer * acres,
-                pesticide: costsPerAcre.pesticide * acres,
-                labor: costsPerAcre.labor * acres,
-                irrigation: costsPerAcre.irrigation * acres,
-                other: costsPerAcre.other * acres
-            },
+            details: cropData.details, // Pass raw details for quantity calc
+            costs: costBreakdown,
             totalCost,
             totalIncome,
             totalProfit,
@@ -124,7 +120,9 @@ const FarmCalculator = () => {
             doc.text("Cost Breakdown:", 20, 85);
             let y = 95;
             Object.entries(calculations.costs).forEach(([key, val]) => {
-                doc.text(`${key.charAt(0).toUpperCase() + key.slice(1)}: Rs. ${val.toLocaleString()}`, 30, y);
+                const detail = calculations.details[key];
+                // Show: Seeds (20 kg x 50): 1000
+                doc.text(`${key.charAt(0).toUpperCase() + key.slice(1)}: ${detail.qty * calculations.acres} ${detail.unit} @ Rs.${detail.rate} = Rs. ${val.toLocaleString()}`, 20, y);
                 y += 10;
             });
 
@@ -264,22 +262,34 @@ const FarmCalculator = () => {
                                 <Package className="w-5 h-5" /> Breakdown
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-12">
-                                {Object.entries(calculations.costs).map(([key, val]) => (
-                                    <div key={key} className="flex justify-between items-center border-b border-dashed border-slate-200 dark:border-slate-800 pb-3">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500">
-                                                {key === 'seeds' && <Sprout className="w-4 h-4" />}
-                                                {key === 'labor' && <Users className="w-4 h-4" />}
-                                                {key === 'fertilizer' && <Package className="w-4 h-4" />}
-                                                {key === 'pesticide' && <Bug className="w-4 h-4" />}
-                                                {key === 'irrigation' && <Droplet className="w-4 h-4" />}
-                                                {key === 'other' && <Zap className="w-4 h-4" />}
+                                {Object.entries(calculations.costs).map(([key, val]) => {
+                                    const detail = calculations.details[key];
+                                    return (
+                                        <div key={key} className="flex justify-between items-center border-b border-dashed border-slate-200 dark:border-slate-800 pb-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500">
+                                                    {key === 'seeds' && <Sprout className="w-5 h-5" />}
+                                                    {key === 'labor' && <Users className="w-5 h-5" />}
+                                                    {key === 'fertilizer' && <Package className="w-5 h-5" />}
+                                                    {key === 'pesticide' && <Bug className="w-5 h-5" />}
+                                                    {key === 'irrigation' && <Droplet className="w-5 h-5" />}
+                                                    {key === 'other' && <Zap className="w-5 h-5" />}
+                                                    {key === 'machinery' && <Tractor className="w-5 h-5" />}
+                                                </div>
+                                                <div>
+                                                    <span className="font-bold capitalize text-slate-600 dark:text-slate-300 block">{key}</span>
+                                                    <span className="text-xs text-slate-400 font-medium">
+                                                        {parseFloat(detail.qty * calculations.acres).toFixed(1)} {detail.unit} x ₹{detail.rate}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <span className="font-bold capitalize text-slate-600 dark:text-slate-300">{key}</span>
+                                            <div className="text-right">
+                                                <span className="font-black text-slate-800 dark:text-white block">₹{val.toLocaleString()}</span>
+                                                <span className="text-xs text-slate-400 font-medium">{detail.desc}</span>
+                                            </div>
                                         </div>
-                                        <span className="font-black text-slate-800 dark:text-white">₹{val.toLocaleString()}</span>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
 
