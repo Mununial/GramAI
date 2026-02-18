@@ -229,7 +229,10 @@ const TractorBooking = () => {
         <div className="relative h-[calc(100vh-100px)] w-full overflow-hidden flex flex-col">
             {/* Map Background */}
             <div className="absolute inset-0 z-0">
-                <GpsMap activeTrack={stage === 'arriving' ? { pos: 50, owner: driver?.name || 'Driver' } : null} />
+                <GpsMap
+                    activeTrack={stage === 'arriving' ? { pos: 50, owner: driver?.name || 'Driver' } : null}
+                    className="h-full w-full rounded-none border-none shadow-none z-0"
+                />
             </div>
 
             {/* Stage 1: Location Search (Overlay) */}
@@ -239,9 +242,9 @@ const TractorBooking = () => {
                         initial={{ y: 100, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         exit={{ y: -100, opacity: 0 }}
-                        className="absolute bottom-0 left-0 right-0 z-20 p-6 bg-gradient-to-t from-black/50 to-transparent"
+                        className="absolute bottom-0 left-0 right-0 z-20 p-6 bg-gradient-to-t from-black/50 to-transparent flex justify-center"
                     >
-                        <div className="max-w-xl mx-auto bg-white dark:bg-slate-900 p-6 rounded-[2rem] shadow-2xl">
+                        <div className="w-full max-w-xl bg-white dark:bg-slate-900 p-6 rounded-[2rem] shadow-2xl">
                             <h2 className="text-2xl font-black mb-4">{getVal(t_ui.search)}</h2>
                             <form onSubmit={handleSearch} className="flex flex-col gap-3">
                                 <div className="flex gap-2">
@@ -282,7 +285,7 @@ const TractorBooking = () => {
                         initial={{ y: '100%' }}
                         animate={{ y: 0 }}
                         exit={{ y: '100%' }}
-                        className="absolute bottom-0 left-0 right-0 z-20 bg-white dark:bg-slate-900 rounded-t-[2.5rem] p-6 shadow-2xl border-t border-slate-200 dark:border-slate-800 h-[70vh]"
+                        className="absolute bottom-0 left-0 right-0 md:left-auto md:right-6 md:bottom-6 md:w-[450px] md:h-[80vh] md:rounded-[2.5rem] z-20 bg-white dark:bg-slate-900 rounded-t-[2.5rem] p-6 shadow-2xl border-t border-slate-200 dark:border-slate-800 h-[70vh]"
                     >
                         <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-6"></div>
                         <div className="flex items-center justify-between mb-4 px-2">
@@ -290,7 +293,7 @@ const TractorBooking = () => {
                             <button onClick={() => setStage('search')} className="p-2 hover:bg-slate-100 rounded-full"><X className="w-5 h-5" /></button>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3 overflow-y-auto h-[55vh] pb-10">
+                        <div className="grid grid-cols-2 gap-3 overflow-y-auto h-[55vh] md:h-[65vh] pb-10">
                             {farmCategories.map(cat => (
                                 <button
                                     key={cat.id}
@@ -316,7 +319,7 @@ const TractorBooking = () => {
                         initial={{ y: '100%' }}
                         animate={{ y: 0 }}
                         exit={{ y: '100%' }}
-                        className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 rounded-t-[2.5rem] p-6 shadow-2xl border-t border-slate-200 dark:border-slate-800"
+                        className="absolute bottom-0 left-0 right-0 md:left-auto md:right-6 md:bottom-6 md:w-[450px] md:rounded-[2.5rem] z-50 bg-white dark:bg-slate-900 rounded-t-[2.5rem] p-6 shadow-2xl border-t border-slate-200 dark:border-slate-800"
                     >
                         <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-6"></div>
                         <div className="flex items-center gap-3 mb-6 px-2">
@@ -361,7 +364,7 @@ const TractorBooking = () => {
                         initial={{ y: '100%' }}
                         animate={{ y: 0 }}
                         exit={{ y: '100%' }}
-                        className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 rounded-t-[2.5rem] p-6 shadow-2xl border-t border-slate-200 dark:border-slate-800"
+                        className="absolute bottom-0 left-0 right-0 md:left-auto md:right-6 md:bottom-6 md:w-[450px] md:rounded-[2.5rem] z-50 bg-white dark:bg-slate-900 rounded-t-[2.5rem] p-6 shadow-2xl border-t border-slate-200 dark:border-slate-800"
                     >
                         <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-6"></div>
                         <div className="flex items-center gap-3 mb-6 px-2">
@@ -415,7 +418,7 @@ const TractorBooking = () => {
             {/* Stage 5: Finding Animation */}
             <AnimatePresence>
                 {stage === 'finding' && (
-                    <motion.div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center">
+                    <motion.div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center">
                         <motion.div
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
@@ -446,7 +449,7 @@ const TractorBooking = () => {
                     <motion.div
                         initial={{ y: '100%' }}
                         animate={{ y: 0 }}
-                        className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 rounded-t-[2.5rem] p-6 shadow-2xl border-t border-slate-200 dark:border-slate-800"
+                        className="absolute bottom-0 left-0 right-0 md:left-auto md:right-6 md:bottom-6 md:w-[450px] md:rounded-[2.5rem] z-50 bg-white dark:bg-slate-900 rounded-t-[2.5rem] p-6 shadow-2xl border-t border-slate-200 dark:border-slate-800"
                     >
                         <div className="flex items-center justify-between mb-6">
                             <div>
@@ -561,7 +564,7 @@ const TractorBooking = () => {
             {/* Stage 7: Receipt Modal */}
             <AnimatePresence>
                 {stage === 'completed' && (
-                    <motion.div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-6">
+                    <motion.div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-6">
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}

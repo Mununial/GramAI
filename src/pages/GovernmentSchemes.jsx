@@ -456,7 +456,13 @@ const GovernmentSchemes = () => {
                             </div>
                         </div>
 
-                        <button className="w-full mt-4 btn-primary py-3 text-sm">
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedScheme(scheme);
+                            }}
+                            className="w-full mt-4 btn-primary py-3 text-sm"
+                        >
                             {getVal(ui.viewGuide)}
                         </button>
                     </motion.div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
     TrendingUp,
@@ -168,7 +169,7 @@ const StatCard = ({ title, value, icon: Icon, trend, color, loading }) => (
     </motion.div>
 );
 
-const FarmerDash = ({ user, loading, t, weather, weatherLoading }) => {
+const FarmerDash = ({ user, loading, t, weather, weatherLoading, navigate }) => {
     const stats = [
         { title: 'Total Savings', value: '₹42,500', icon: CreditCard, trend: 12.5, color: 'bg-primary-600' },
         { title: 'Active Requests', value: '12', icon: Clock, trend: -5.2, color: 'bg-amber-600' },
@@ -207,7 +208,7 @@ const FarmerDash = ({ user, loading, t, weather, weatherLoading }) => {
                             </div>
                         </div>
                     )}
-                    <button className="btn-primary">+ {t('bookNow')}</button>
+                    <button onClick={() => navigate('/tractors')} className="btn-primary">+ {t('bookNow')}</button>
                 </div>
             </div>
 
@@ -370,6 +371,7 @@ const AdminDash = ({ user, loading, t }) => {
 const Dashboard = () => {
     const { user } = useAuth();
     const { t } = useLanguage();
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const { weather, loading: weatherLoading } = useWeather();
 
@@ -380,7 +382,7 @@ const Dashboard = () => {
 
     if (user?.role === 'provider') return <ProviderDash user={user} loading={loading} t={t} />;
     if (user?.role === 'admin' || user?.role === 'superadmin') return <AdminDash user={user} loading={loading} t={t} />;
-    return <FarmerDash user={user} loading={loading} t={t} weather={weather} weatherLoading={weatherLoading} />;
+    return <FarmerDash user={user} loading={loading} t={t} weather={weather} weatherLoading={weatherLoading} navigate={navigate} />;
 };
 
 export default Dashboard;

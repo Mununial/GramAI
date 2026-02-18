@@ -108,7 +108,7 @@ const TractorMarker = ({ userPos }) => {
     );
 };
 
-const GpsMap = ({ activeTrack = null }) => {
+const GpsMap = ({ activeTrack = null, className = "" }) => {
     const [scannedPoints, setScannedPoints] = useState([]);
     const [isPinging, setIsPinging] = useState(true);
     const [activeLayer, setActiveLayer] = useState('satellite'); // satellite, soil, government
@@ -181,8 +181,11 @@ const GpsMap = ({ activeTrack = null }) => {
         soil: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}' // Esri Topo as proxy for soil map look
     };
 
+    const defaultClasses = "h-[400px] md:h-[600px] rounded-[30px] md:rounded-[40px] border border-slate-200 dark:border-slate-800 shadow-2xl";
+    const finalClasses = className ? className : defaultClasses;
+
     return (
-        <div className="relative w-full h-[400px] md:h-[600px] bg-slate-50 dark:bg-slate-950 rounded-[30px] md:rounded-[40px] overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl z-0">
+        <div className={`relative w-full bg-slate-50 dark:bg-slate-950 overflow-hidden z-0 ${finalClasses}`}>
             {/* Enhanced HUD Overlay */}
             <div className="absolute top-4 left-4 md:top-6 md:left-6 z-[400] space-y-2 pointer-events-none"> {/* higher z-index for leaflet */}
                 <div className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 backdrop-blur-md px-4 py-2 rounded-xl text-white text-[10px] font-black uppercase tracking-widest border border-white/20 shadow-lg pointer-events-auto">

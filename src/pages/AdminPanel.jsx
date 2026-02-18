@@ -211,8 +211,8 @@ const AdminPanel = () => {
                     <p className="text-slate-500 font-medium">Monitoring Smart Village Ecosystem Performance</p>
                 </div>
                 <div className="flex gap-3">
-                    <button className="btn-secondary">Export Audit Log</button>
-                    <button className="btn-primary">View Global Map</button>
+                    <button onClick={() => toast.info("Exporting data implementation pending")} className="btn-secondary">Export Audit Log</button>
+                    <button onClick={() => toast.info("Global map view implementation pending")} className="btn-primary">View Global Map</button>
                 </div>
             </div>
 
