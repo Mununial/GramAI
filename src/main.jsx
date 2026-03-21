@@ -5,6 +5,7 @@ import './index.css'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { LanguageProvider } from './context/LanguageContext'
+import { WalletProvider } from './context/WalletContext'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
@@ -13,8 +14,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <AuthProvider>
       <ThemeProvider>
         <LanguageProvider>
-          <App />
-          <ToastContainer position="bottom-right" theme="colored" />
+          <WalletProvider>
+            <App />
+            <ToastContainer position="bottom-right" theme="colored" />
+          </WalletProvider>
         </LanguageProvider>
       </ThemeProvider>
     </AuthProvider>

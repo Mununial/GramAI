@@ -5,7 +5,7 @@ import {
     Calculator, Sprout, Tractor, Wallet, ArrowRight,
     CheckCircle2, AlertTriangle, Plus, X, BarChart3,
     Leaf, Coins, Milestone, Users, Calendar, Filter,
-    ChevronDown, Trash2, PieChart, Download, CloudRain, Zap, FileText, Navigation, Settings, Wrench
+    ChevronDown, Trash2, PieChart, Download, CloudRain, Zap, FileText, Navigation, Settings, Wrench, Warehouse, History, Clock
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { toast } from 'react-toastify';
@@ -239,6 +239,133 @@ const FinancialPlanning = () => {
                         exit={{ opacity: 0, y: -10 }}
                         className="space-y-6"
                     >
+                        {/* Animated Poster-Style Scheme Money Guide */}
+                        <motion.div 
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6, type: 'spring', bounce: 0.4 }}
+                            className="relative overflow-hidden bg-white dark:bg-slate-900 rounded-[3rem] border-4 border-amber-400 dark:border-amber-600 shadow-2xl group"
+                        >
+                            {/* Decorative Background Patterns */}
+                            <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-amber-400/20 to-transparent"></div>
+                            <div className="absolute -top-32 -right-32 w-96 h-96 bg-amber-400/20 rounded-full blur-3xl pointer-events-none"></div>
+                            <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-green-400/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                            <div className="relative z-10 p-8 md:p-10">
+                                {/* Poster Header */}
+                                <div className="text-center mb-10">
+                                    <motion.div 
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        transition={{ delay: 0.2, type: 'spring' }}
+                                        className="inline-flex items-center justify-center p-4 bg-amber-500 rounded-full shadow-xl mb-4"
+                                    >
+                                        <IndianRupee className="w-10 h-10 text-white" />
+                                    </motion.div>
+                                    <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white mb-4 tracking-tight drop-shadow-sm uppercase">
+                                        {lang === 'or' ? 'ଯୋଜନା ଟଙ୍କାର ସଠିକ୍ ବ୍ୟବହାର' : lang === 'hi' ? 'योजना के पैसे का सही उपयोग' : 'Smart Scheme Investment'}
+                                    </h2>
+                                    <p className="text-lg md:text-xl font-bold text-amber-600 dark:text-amber-500 max-w-2xl mx-auto">
+                                        {lang === 'or' ? 'ପ୍ରତି କିସ୍ତିରେ ମିଳୁଥିବା ₹୨,୦୦୦ କୁ କିପରି ବୁଦ୍ଧିମାନ ଭାବେ ଲଗାଇବେ?' : lang === 'hi' ? 'हर किश्त में मिलने वाले ₹2,000 को बुद्धिमानी से कैसे निवेश करें?' : 'How to wisely invest the ₹2,000 you get every 4 months?'}
+                                    </p>
+                                    <div className="inline-block mt-4 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-6 py-2 rounded-full text-sm font-black border border-red-200 dark:border-red-800">
+                                        🚨 {lang === 'or' ? 'ଅନାବଶ୍ୟକ ଖର୍ଚ୍ଚ ବନ୍ଦ କରନ୍ତୁ!' : lang === 'hi' ? 'फालतू खर्च बंद करें!' : 'Stop wasting it on daily expenses!'}
+                                    </div>
+                                </div>
+
+                                {/* Pipeline Visual Concept */}
+                                <div className="relative max-w-5xl mx-auto">
+                                    {/* Timeline Line (Desktop only) */}
+                                    <div className="hidden md:block absolute top-[45%] left-[10%] right-[10%] h-2 bg-gradient-to-r from-amber-200 via-green-300 to-emerald-400 rounded-full z-0"></div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+                                        {/* Step 1: Savings */}
+                                        <motion.div 
+                                            whileHover={{ y: -10, scale: 1.05 }}
+                                            className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl p-6 rounded-3xl border-2 border-amber-200 dark:border-amber-800 shadow-xl text-center relative"
+                                        >
+                                            <div className="absolute -top-3 right-4 bg-amber-500 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-sm">
+                                                {lang === 'or' ? 'ମାସ ୧-୪' : lang === 'hi' ? 'महीना 1-4' : 'MONTH 1-4'}
+                                            </div>
+                                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-amber-500 text-white font-black text-xl rounded-full flex justify-center items-center shadow-lg border-4 border-white dark:border-slate-900">1</div>
+                                            <div className="w-20 h-20 mx-auto bg-amber-100 dark:bg-amber-900/40 rounded-2xl flex items-center justify-center mb-4 mt-4">
+                                                <PiggyBank className="w-10 h-10 text-amber-600" />
+                                            </div>
+                                            <h4 className="text-xl font-black text-slate-800 dark:text-white mb-2">
+                                                {lang === 'or' ? 'ପ୍ରଥମେ ସଞ୍ଚୟ କରନ୍ତୁ' : lang === 'hi' ? 'पहले बैंक में बचाएं' : 'Save It First'}
+                                            </h4>
+                                            <p className="text-sm font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/20 py-2 rounded-xl mb-3">
+                                                ₹2000 {lang === 'or' ? 'ମିଳିବା କ୍ଷଣି ବ୍ୟାଙ୍କରେ ରଖନ୍ତୁ' : lang === 'hi' ? 'आते ही बैंक में रखें' : 'Banked immediately'}
+                                            </p>
+                                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                {lang === 'or' ? 'ଏହାକୁ ନଗଦ ଆକାରରେ ବାହାର କରନ୍ତୁ ନାହିଁ। ବ୍ୟାଙ୍କରେ ରଖିଲେ ଏହା ସୁରକ୍ଷିତ ରହିବ ଏବଂ ଖର୍ଚ୍ଚ ହେବ ନାହିଁ।' : lang === 'hi' ? 'इसे नकद में बाहर न निकालें। बैंक में रखने से यह रोज़मर्रा के खर्चों से सुरक्षित रहेगा।' : 'Do not withdraw as cash. Keep it in the bank account so it is not spent on groceries.'}
+                                            </p>
+                                        </motion.div>
+
+                                        {/* Step 2: Planning */}
+                                        <motion.div 
+                                            whileHover={{ y: -10, scale: 1.05 }}
+                                            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+                                            className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl p-6 rounded-3xl border-2 border-green-200 dark:border-green-800 shadow-xl text-center relative mt-0 md:mt-12"
+                                        >
+                                            <div className="absolute -top-3 right-4 bg-green-500 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-sm">
+                                                {lang === 'or' ? 'ମାସ ୫-୮' : lang === 'hi' ? 'महीना 5-8' : 'MONTH 5-8'}
+                                            </div>
+                                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-green-500 text-white font-black text-xl rounded-full flex justify-center items-center shadow-lg border-4 border-white dark:border-slate-900">2</div>
+                                            <div className="w-20 h-20 mx-auto bg-green-100 dark:bg-green-900/40 rounded-2xl flex items-center justify-center mb-4 mt-4">
+                                                <Sprout className="w-10 h-10 text-green-600" />
+                                            </div>
+                                            <h4 className="text-xl font-black text-slate-800 dark:text-white mb-2">
+                                                {lang === 'or' ? 'ଋତୁ ପୂର୍ବ କ୍ରୟ' : lang === 'hi' ? 'सीजन से पहले खरीद' : 'Pre-Season Buy'}
+                                            </h4>
+                                            <p className="text-sm font-bold text-green-600 bg-green-50 dark:bg-green-900/20 py-2 rounded-xl mb-3">
+                                                {lang === 'or' ? 'ବିହନ ଏବଂ ସାର କିଣନ୍ତୁ' : lang === 'hi' ? 'बीज और खाद खरीदें' : 'Seeds & Fertilizer'}
+                                            </p>
+                                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                {lang === 'or' ? 'ମିଳିଥିବା ଟଙ୍କାରୁ ଅଗ୍ରୀମ ବିହନ ଏବଂ ସାର କିଣି ରଖନ୍ତୁ। ପରେ ଦର ବଢିଗଲେ ବି ଆପଣଙ୍କୁ ଚିନ୍ତା ନାହିଁ।' : lang === 'hi' ? 'इस पैसे से बुवाई के लिए उन्नत बीज और खाद खरीदें। समय पर चीजें तैयार रहेंगी।' : 'Use the ₹2000 to buy advanced seeds & fertilizers. Prevents loan dependencies later.'}
+                                            </p>
+                                        </motion.div>
+
+                                        {/* Step 3: Yield */}
+                                        <motion.div 
+                                            whileHover={{ y: -10, scale: 1.05 }}
+                                            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+                                            className="bg-emerald-600 p-6 rounded-3xl shadow-xl shadow-emerald-600/30 text-center relative mt-0 md:mt-24 transform md:-rotate-2"
+                                        >
+                                            <div className="absolute -top-3 right-4 bg-white text-emerald-600 text-[10px] font-black px-3 py-1 rounded-full shadow-sm">
+                                                {lang === 'or' ? 'ମାସ ୯-୧୨' : lang === 'hi' ? 'महीना 9-12' : 'MONTH 9-12'}
+                                            </div>
+                                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-white text-emerald-600 font-black text-xl rounded-full flex justify-center items-center shadow-lg border-4 border-emerald-600">3</div>
+                                            <div className="w-20 h-20 mx-auto bg-white/20 rounded-2xl flex items-center justify-center mb-4 mt-4">
+                                                <TrendingUp className="w-10 h-10 text-white" />
+                                            </div>
+                                            <h4 className="text-xl font-black text-white mb-2">
+                                                {lang === 'or' ? 'ବଡ଼ ଲାଭ ପାଆନ୍ତୁ!' : lang === 'hi' ? 'बड़ा लाभ पाएं!' : 'Massive Profit!'}
+                                            </h4>
+                                            <p className="text-sm font-black text-emerald-900 bg-white py-2 rounded-xl mb-3">
+                                                {lang === 'or' ? 'ଭଲ ଅମଳ, ଅଧିକ ଆୟ' : lang === 'hi' ? 'अच्छी फसल, ज्यादा कमाई' : 'Better Yield, More Income'}
+                                            </p>
+                                            <p className="text-xs font-medium text-emerald-100">
+                                                {lang === 'or' ? 'ଏହି ଛୋଟ ବିନିଯୋଗ ଆପଣଙ୍କୁ ଖରାପ ଋଣରୁ ବଞ୍ଚାଇବା ସହ ଅମଳ ବୃଦ୍ଧି କରିବ!' : lang === 'hi' ? 'यह छोटा निवेश आपको कर्ज से बचाएगा और उपज को दोगुना कर देगा!' : 'This ₹2000 smart investment protects from high-interest loans & boosts output.'}
+                                            </p>
+                                        </motion.div>
+                                    </div>
+                                </div>
+                                
+                                <div className="mt-12 p-5 bg-amber-50 dark:bg-amber-900/30 rounded-2xl border-2 border-dashed border-amber-300 dark:border-amber-700 max-w-2xl mx-auto flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+                                    <div className="p-3 bg-white dark:bg-slate-800 rounded-xl shadow-sm rotate-12">
+                                        <Milestone className="w-8 h-8 text-amber-500" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-black text-slate-800 dark:text-amber-100 text-lg">💡 GramAI Pro Tip:</h4>
+                                        <p className="text-sm text-slate-600 dark:text-amber-200/80 font-medium">
+                                            {lang === 'or' ? 'ମନେରଖନ୍ତୁ: ୩ଟି କିସ୍ତିରେ ମୋଟ ₹୬୦୦୦ ମିଳେ। ଦୁଇଟି କିସ୍ତି ଚାଷରେ ଲଗାନ୍ତୁ, ଗୋଟିଏକୁ ଜରୁରୀ ପରିସ୍ଥିତି ପାଇଁ ସାଇତି ରଖନ୍ତୁ।' : lang === 'hi' ? 'याद रखें: आपको साल में ₹6000 (3 किश्त) मिलते हैं। 2 को खेती में निवेश करें, 1 को आपात स्थिति के लिए बचाएं।' : 'Remember: You get ₹6000/year (3 installments). Invest 2 in crops, keep 1 in Bank for emergencies.'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+
                         {/* Quick Stats Chart */}
                         <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800">
                             <div className="h-64">

@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
     LayoutDashboard,
     Tractor,
+    Truck,
     Wrench,
     ScanSearch,
     MessageSquare,
@@ -45,6 +46,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         { name: 'System Settings', icon: Settings, path: '/admin/settings', roles: ['admin'] },
 
         { name: t('rentTractor'), icon: Tractor, path: '/tractors', roles: ['farmer'] },
+        { name: t('logistics'), icon: Truck, path: '/logistics', roles: ['farmer'] },
         { name: 'Land Lease', icon: Warehouse, path: '/land-lease', roles: ['farmer'] },
         { name: t('services'), icon: Wrench, path: '/services', roles: ['farmer'] },
         { name: 'Govt Schemes', icon: Landmark, path: '/government-schemes', roles: ['farmer'] },

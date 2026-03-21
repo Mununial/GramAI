@@ -114,6 +114,50 @@ export const diseases = [
         solution: "Spray Propiconazole 25 EC @ 1ml/liter immediately after noticing rust pustules.",
         medicine_img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR0NlXpZ85Tz-yY2p_w8Kz_u8W4-Jp-4X8b0w&s"
     },
+    {
+        name: "Corn Common Rust (ମକା ରୋଗ)",
+        confidence: 94,
+        severity: "Medium",
+        treatment: "Pyraclostrobin",
+        loss: 30,
+        prevention: "Destroy crop residue, use hybrid seeds.",
+        mechanism: "Inhibits cellular respiration in fungi, cutting off their energy supply (Fungal cells ki taqat khatam kar deta hai).",
+        solution: "Spray Pyraclostrobin 20% WG @ 1g per liter when yellowish-brown spots appear.",
+        medicine_img: "https://5.imimg.com/data5/SELLER/Default/2022/2/WI/WI/XW/4925769/headline-fungicide-500x500.jpg"
+    },
+    {
+        name: "Cotton Leaf Spot (କପା ରୋଗ)",
+        confidence: 91,
+        severity: "Medium",
+        treatment: "Carbendazim 50% WP",
+        loss: 20,
+        prevention: "Seed treatment, avoid water stagnation.",
+        mechanism: "Prevents fungal cell division, stopping the spread of infection (Pathogen ko phailne se rokta hai).",
+        solution: "Apply Carbendazim @ 2g/kg for seed treatment or 1g/liter for foliar spray.",
+        medicine_img: "https://5.imimg.com/data5/SELLER/Default/2021/6/MQ/LI/HS/130103607/bavistin-fungicide-500x500.jpg"
+    },
+    {
+        name: "Ginger Rhizome Rot (ଅଦା ସଢା ରୋଗ)",
+        confidence: 96,
+        severity: "High",
+        treatment: "Metalaxyl 8% + Mancozeb 64% WP",
+        loss: 70,
+        prevention: "Select healthy rhizomes, improve drainage.",
+        mechanism: "Systemic action that protects the roots and tubes from within (Jadon ko andar se suraksha deta hai).",
+        solution: "Drench the soil with Metalaxyl-Mancozeb mix @ 2.5g/liter of water.",
+        medicine_img: "https://tiimg.com/res/product_img/1/864/357/1864357/1632483842.jpg"
+    },
+    {
+        name: "Citrus Canker (ଲେମ୍ବୁ ରୋଗ)",
+        confidence: 93,
+        severity: "Medium",
+        treatment: "Streptocycline + Copper Oxychloride",
+        loss: 15,
+        prevention: "Prune infected branches, control leaf miners.",
+        mechanism: "Antibiotic action that kills bacterial pathogens on plant surfaces (Bacteria ko maarta hai).",
+        solution: "Mix 1g of Streptocycline and 30g of Copper Oxychloride in 10 liters of water and spray.",
+        medicine_img: "https://5.imimg.com/data5/SELLER/Default/2022/3/RE/RR/ML/37272841/streptocycline-agri-use-bactericide-500x500.jpg"
+    },
     ...Array.from({ length: 16 }).map((_, i) => ({
         name: `Unknown Disease Pattern ${i + 1}`,
         confidence: Math.floor(Math.random() * 15) + 85,

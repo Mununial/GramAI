@@ -1,641 +1,553 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Tractor, MapPin, Clock, Star, CheckCircle2, X, Navigation,
-    Fuel, Settings, ShieldCheck, Search, ArrowRight, Phone,
-    FileText, Download, User, Sprout, Truck, Scissors, AlertTriangle, MessageSquare
+    Tractor, MapPin, Star, CheckCircle2, X, Navigation,
+    Settings, ShieldCheck, ArrowRight, Phone,
+    FileText, Download, User, Sprout, Truck, Scissors, AlertTriangle,
+    MessageSquare, Loader2, Zap, Timer, Signal, Users, ChevronRight,
+    PhoneOff, ThumbsUp, ThumbsDown
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useWallet } from '../context/WalletContext';
 import GpsMap from '../components/common/GpsMap';
+import LocationSearch from '../components/common/LocationSearch';
 import { jsPDF } from 'jspdf';
 import { toast } from 'react-toastify';
 
+/* ─── Static Demo Data ─────────────────────────────────── */
+const DRIVER = {
+    name: { en: 'Raju Bhai', or: 'ରାଜୁ ଭାଇ' },
+    vehicle: { en: 'Mahindra 575 DI', or: 'ମହିନ୍ଦ୍ରା ୫୭୫ DI' },
+    experience: { en: '8 years', or: '୮ ବର୍ଷ' },
+    rating: 4.8, reviews: 214, phone: '6370998587',
+    distance: { en: '2.3 km', or: '୨.୩ କିମି' },
+    id: 'OD-RJ-0471', avatar: 'RB'
+};
+
+const ALL_MACHINES = [
+    { id: 'rotavator', name: { en: 'Rotavator (7ft)', or: 'ରୋଟାଭେଟର' }, price: 800, eta: { en: '10 min', or: '୧୦ ମିନିଟ୍' }, hp: '45HP', rating: 4.7, reviews: 128, badge: { en: 'Most Booked', or: 'ସର୍ବାଧିକ ବୁକିଂ' }, bc: 'green', desc: { en: 'Best for Paddy field preparation', or: 'ଧାନ ଜମି ପାଇଁ ସବୁଠୁ ଭଲ' } },
+    { id: 'cultivator', name: { en: 'Cultivator (9 Tyres)', or: 'କଲ୍ଟିଭେଟର' }, price: 600, eta: { en: '15 min', or: '୧୫ ମିନିଟ୍' }, hp: '35HP', rating: 4.5, reviews: 92, badge: { en: 'Budget Pick', or: 'ଶସ୍ତା' }, bc: 'blue', desc: { en: 'Ideal for dry soil loosening', or: 'ଖରାଟିଆ ଚାଷ ପାଇଁ ଉପଯୁକ୍ତ' } },
+    { id: 'plough', name: { en: 'MB Plough', or: 'ହଳ ଲଙ୍ଗଳ' }, price: 900, eta: { en: '20 min', or: '୨୦ ମିନିଟ୍' }, hp: '50HP', rating: 4.6, reviews: 110, badge: { en: 'Heavy Duty', or: 'ଭାରୀ ଚାଷ' }, bc: 'orange', desc: { en: 'Deep tilling for tough fields', or: 'ଟାଣ ମାଟି ପାଇଁ ଗଭୀର ଚାଷ' } },
+    { id: 'leveller', name: { en: 'Laser Leveller', or: 'ଲେଜର ଲେଭେଲର' }, price: 1200, eta: { en: '1 day', or: '୧ ଦିନ' }, hp: '55HP', rating: 4.8, reviews: 76, badge: { en: 'Premium', or: 'ପ୍ରିମିୟମ୍' }, bc: 'purple', desc: { en: 'Precision field levelling', or: 'ଜମିକୁ ସମାନ କରିବା ପାଇଁ' } }
+];
+
+const CATEGORIES = [
+    { id: 'prep', label: { en: 'Land Prep', or: 'ଜମି ପ୍ରସ୍ତୁତି' }, Icon: Tractor, color: 'green', machines: ALL_MACHINES },
+    {
+        id: 'sowing', label: { en: 'Sowing', or: 'ବୁଣାବୁଣି' }, Icon: Sprout, color: 'emerald', machines: [
+            { id: 'seed_drill', name: { en: 'Auto Seed Drill', or: 'ଅଟୋ ସିଡ୍ ଡ୍ରିଲ୍' }, price: 1000, eta: { en: '30 min', or: '୩୦ ମିନିଟ୍' }, hp: '40HP', rating: 4.6, reviews: 85, badge: { en: 'Precision', or: 'ସଠିକ୍' }, bc: 'green', desc: { en: 'Uniform seed placement', or: 'ସମାନ ଭାବେ ବିହନ ବୁଣିବା' } }
+        ]
+    },
+    {
+        id: 'harvest', label: { en: 'Harvest', or: 'ଅମଳ' }, Icon: Scissors, color: 'amber', machines: [
+            { id: 'combine', name: { en: 'Combine Harvester', or: 'ହାର୍ଭେଷ୍ଟର' }, price: 1800, eta: { en: '45 min', or: '୪୫ ମିନିଟ୍' }, hp: '75HP', rating: 4.9, reviews: 145, badge: { en: '#1 Choice', or: 'ନମ୍ବର ୧' }, bc: 'orange', desc: { en: 'Wheat & Paddy harvesting', or: 'ଧାନ ଓ ଗହମ ଅମଳ' } }
+        ]
+    }
+];
+
+const t_ui = {
+    en: {
+        rentTractor: 'Rent a Tractor', nearbyProviders: 'Nearby providers available', findMachinery: 'Find Machinery',
+        useGPS: 'Use Current GPS', villagePlaceholder: 'Enter village name', plotPlaceholder: 'Plot number / Landmark',
+        groupBooking: 'Small Land Group Booking (-20%)', groupHelp: 'Book with neighbors to save fuel costs',
+        selectService: 'Select Service', chooseNearby: 'Choose nearby machinery', paymentMethod: 'Payment Method',
+        cashUPI: 'Cash / UPI', kisanCredit: 'Kisan Credit / Pay Later', payLaterDesc: 'Pay after harvest (0% interest)',
+        total: 'Total', finding: 'Finding Nearest Providers...', matching: 'Connecting with closest operator',
+        arriving: 'Tractor is Arriving!', eta: 'ETA', dist: 'Distance', complete: 'Service Completed!',
+        download: 'Download Receipt', bookNew: 'Book New Service', report: 'Report Issue',
+        joining: 'Joining nearest tractor group...', groupActive: 'Group Active: 4 Neighbors Online',
+        serviceStarted: 'Service Started', workProgress: 'Field Work Progress', minsLeft: 'min left',
+        loc_fixed: '📍 GPS Tracking Active', callFeedbackTitle: 'Call Feedback', didPickUp: 'Did the provider pick up?',
+        isComing: 'Is Raju Bhai coming?', driverStatus: 'Driver Status', coming: 'Yes, Coming',
+        notPicking: 'Not Picking Up', busy: 'Busy / Out of reach', lateReply: 'Asked to wait longer',
+        submit: 'Submit Feedback',
+        startWorkPrompt: 'Only start when Raju Bhai reaches your field',
+        finishWorkPrompt: 'Tap Finish when the work in your plot is complete',
+        startWorkBtn: 'Start Work Now →',
+        finishWorkBtn: 'Finish & Confirm Work',
+        landSize: 'Land Size',
+        acre: 'Acre',
+        guntha: 'Guntha',
+        estTime: 'Est. Time',
+        estCost: 'Est. Cost',
+        finalBill: 'Final Bill Summary',
+        rate: 'Rate',
+        timeSpent: 'Time Spent',
+        rateService: 'How was the service?'
+    },
+    or: {
+        rentTractor: 'ଟ୍ରାକ୍ଟର ଭଡା', nearbyProviders: 'ପାଖାପାଖି ପ୍ରଦାନକାରୀ ଉପଲବ୍ଧ', findMachinery: 'ମେସିନ୍ ଖୋଜନ୍ତୁ',
+        useGPS: 'ପ୍ରକୃତ ନିକଟସ୍ଥ ସ୍ଥାନ (GPS)', villagePlaceholder: 'ଗ୍ରାମର ନାମ ଦିଅନ୍ତୁ', plotPlaceholder: 'ପ୍ଲଟ୍ ନମ୍ବର / ସ୍ଥାନ',
+        groupBooking: 'ଜମି ସମଷ୍ଟି ବୁକିଂ (-୨୦%)', groupHelp: 'ପଡୋଶୀ ଚାଷୀଙ୍କ ସହ ମିଶି ବୁକ୍ କରନ୍ତୁ',
+        selectService: 'ସେବା ଚୟନ', chooseNearby: 'ଭଲ ଯନ୍ତ୍ର ବାଛନ୍ତୁ', paymentMethod: 'ଟଙ୍କା ଦେବା ପଦ୍ଧତି',
+        cashUPI: 'ନଗଦ / UPI', kisanCredit: 'କିଷାନ କ୍ରେଡ଼ିଟ୍ (ପରେ ଦିଅନ୍ତୁ)', payLaterDesc: 'ଫସଲ ଅମଳ ପରେ ଦିଅନ୍ତୁ (0% ସୁଧ)',
+        total: 'ମୋଟ୍', finding: 'ନିକଟସ୍ଥ ମେସିନ୍ ଖୋଜା ଚାଲିଛି...', matching: 'ସବୁଠୁ ପାଖ ପ୍ରଦାନକାରୀଙ୍କ ସହ ଯୋଡୁଛି',
+        arriving: 'ଟ୍ରାକ୍ଟର ଆସୁଛି!', eta: 'ସମୟ', dist: 'ଦୂରତା', complete: 'ସେବା ସମ୍ପୂର୍ଣ୍ଣ ହେଲା!',
+        download: 'ବିଲ୍ ଡାଉନଲୋଡ୍', bookNew: 'ନୂଆ ବୁକିଂ', report: 'ରିପୋର୍ଟ',
+        joining: 'ନିକଟସ୍ଥ ସମୂହ ବୁକିଂ ସହ ଯୋଡୁଛି...', groupActive: 'ସମୂହ ସକ୍ରିୟ: ୪ ପଡୋଶୀ ଚାଷୀ ଯୋଡି ହୋଇଛନ୍ତି',
+        serviceStarted: 'ସେବା ଆରମ୍ଭ', workProgress: 'କାମର ପ୍ରଗତି', minsLeft: 'ମିନିଟ୍ ବାକି',
+        loc_fixed: '📍 GPS ଟ୍ରାକିଂ ସକ୍ରିୟ', callFeedbackTitle: 'କଲ୍ ରିପୋର୍ଟ', didPickUp: 'ପ୍ରଦାନକାରୀ କଲ୍ ଉଠାଇଲେ କି?',
+        isComing: 'ରାଜୁ ଭାଇ ଆସୁଛନ୍ତି କି?', driverStatus: 'ଡ୍ରାଇଭର ସ୍ଥିତି', coming: 'ହଁ, ଆସୁଛନ୍ତି',
+        notPicking: 'ଉଠାଉ ନାହାଁନ୍ତି', busy: 'ବ୍ୟସ୍ତ / କଭରେଜ୍ ବାହାରେ', lateReply: 'ପରେ ଆସିବାକୁ କହିଲେ',
+        submit: 'ରିପୋର୍ଟ ଦିଅନ୍ତୁ',
+        startWorkPrompt: 'ରାଜୁ ଭାଇ ପହଞ୍ଚିବା ପରେ କାମ ଆରମ୍ଭ କରନ୍ତୁ',
+        finishWorkPrompt: 'ଆପଣଙ୍କ ଜମିରେ କାମ ସରିବା ପରେ ଏଠାରେ କ୍ଲିକ୍ କରନ୍ତୁ',
+        startWorkBtn: 'କାମ ଆରମ୍ଭ କରନ୍ତୁ →',
+        finishWorkBtn: 'କାମ ଶେଷ କରନ୍ତୁ',
+        landSize: 'ଜମିର ପରିମାଣ',
+        acre: 'ଏକର',
+        guntha: 'ଗୁଣ୍ଠ',
+        estTime: 'ଆନୁମାନିକ ସମୟ',
+        estCost: 'ଆନୁମାନିକ ଖର୍ଚ୍ଚ',
+        finalBill: 'ବିଲ୍ ର ବିବରଣୀ',
+        rate: 'ଭଡା (ଘଣ୍ଟା)',
+        timeSpent: 'ସମୟ ଲାଗିଲା',
+        rateService: 'ସେବା କିପରି ଥିଲା?'
+    }
+};
+
+const StarRow = ({ rating, size = 3 }) => (
+    <span className="flex items-center gap-0.5">
+        {[1, 2, 3, 4, 5].map(s => (
+            <Star key={s} className={`w-${size} h-${size} ${s <= Math.round(rating) ? 'text-amber-400 fill-amber-400' : 'text-slate-200 dark:text-slate-700'}`} />
+        ))}
+    </span>
+);
+
+const Badge = ({ text, bc = 'green' }) => {
+    const map = {
+        green: 'bg-green-100 text-green-700', blue: 'bg-blue-100 text-blue-700',
+        orange: 'bg-orange-100 text-orange-700', purple: 'bg-purple-100 text-purple-700'
+    };
+    return <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${map[bc] || map.green}`}>{text}</span>;
+};
+
+const SlidePanel = ({ children, z = 'z-20' }) => (
+    <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 280 }}
+        className={`absolute bottom-0 left-0 right-0 md:left-auto md:right-4 md:bottom-4 md:w-[420px] md:rounded-[2.5rem] ${z} bg-white dark:bg-slate-900 rounded-t-[2rem] p-5 shadow-2xl border-t border-slate-100 dark:border-slate-800`}>
+        <div className="w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-4" />
+        {children}
+    </motion.div>
+);
+
 const TractorBooking = () => {
     const { lang } = useLanguage();
-
-    // Stages: 'search', 'category', 'select', 'finding', 'arriving', 'completed'
+    const l = t_ui[lang] || t_ui['en'];
     const [stage, setStage] = useState('search');
+    const [village, setVillage] = useState('');
+    const [plotNo, setPlotNo] = useState('');
     const [location, setLocation] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState(null);
-    const [selectedType, setSelectedType] = useState(null);
-    const [driver, setDriver] = useState(null);
+    const [landSize, setLandSize] = useState('1');
+    const [landUnit, setLandUnit] = useState('acre');
+    const [isGroup, setIsGroup] = useState(false);
+    const [selectedCat, setSelectedCat] = useState(null);
+    const [selectedMachine, setSelectedMachine] = useState(null);
     const [paymentMode, setPaymentMode] = useState('cash');
+    const [workProgress, setWorkProgress] = useState(0);
+    const [userRating, setUserRating] = useState(0);
+    const [locating, setLocating] = useState(false);
+    const [showCallFeedback, setShowCallFeedback] = useState(false);
+    const [callOutcome, setCallOutcome] = useState(null);
+    const [mapCenter, setMapCenter] = useState(null); // External center for GpsMap
+    const progressRef = useRef(null);
 
+    const handleDownloadReceipt = () => {
+        const doc = new jsPDF();
+        
+        // Colors
+        const primaryColor = [22, 163, 74]; // GramAI Green
+        const secondaryColor = [30, 41, 59]; // Slate 800
 
+        // Branding
+        doc.setFillColor(...primaryColor);
+        doc.rect(0, 0, 210, 40, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(24);
+        doc.setFont('helvetica', 'bold');
+        doc.text('GramAI Tractor Service', 20, 25);
+        doc.setFontSize(10);
+        doc.text('MECHANIZED FARMING SERVICE RECEIPT', 20, 32);
 
-    // Farming Categories & Machines
-    const farmCategories = [
-        {
-            id: 'prep',
-            title: { en: 'Land Preparation', hi: 'खेत की तैयारी', or: 'ଜମି ପ୍ରସ୍ତୁତି' },
-            icon: Tractor,
-            desc: { en: 'Plough, Rotavator, Cultivator', hi: 'हल, रोटावेटर, कल्टीवेटर', or: 'ହଳ, ରୋଟାଭେଟର' },
-            machines: [
-                { id: 'rotavator', name: 'Rotavator (7ft)', price: 800, eta: '10 min', capacity: '45HP+' },
-                { id: 'cultivator', name: 'Cultivator (9 Tyres)', price: 600, eta: '15 min', capacity: '35HP+' },
-                { id: 'plough', name: 'MB Plough', price: 900, eta: '20 min', capacity: '50HP+' },
-                { id: 'leveller', name: 'Laser Leveller', price: 1200, eta: '1 day', capacity: '55HP+' }
-            ]
-        },
-        {
-            id: 'sowing',
-            title: { en: 'Sowing & Planting', hi: 'बुवाई और रोपाई', or: 'ବୁଣାବୁଣି' },
-            icon: Sprout,
-            desc: { en: 'Seed Drill, Planter', hi: 'सीड ड्रिल, प्लांटर', or: 'ସିଡ୍ ଡ୍ରିଲ୍' },
-            machines: [
-                { id: 'seed_drill', name: 'Auto Seed Drill', price: 1000, eta: '30 min', capacity: 'High Precision' },
-                { id: 'potato_planter', name: 'Potato Planter', price: 1500, eta: '1 hr', capacity: 'Automatic' },
-                { id: 'transplanter', name: 'Paddy Transplanter', price: 2000, eta: '2 hrs', capacity: 'Walk-behind' }
-            ]
-        },
-        {
-            id: 'harvest',
-            title: { en: 'Harvesting', hi: 'फसल कटाई (Dhan Cut)', or: 'ଫସଲ ଅମଳ' },
-            icon: Scissors,
-            desc: { en: 'Harvester, Reaper', hi: 'हार्वेस्टर, रीपर', or: 'ହାର୍ଭେଷ୍ଟର' },
-            machines: [
-                { id: 'combine_tyre', name: 'Combine (Tyre)', price: 1800, eta: '45 min', capacity: 'Wheat/Paddy' },
-                { id: 'combine_chain', name: 'Combine (Chain)', price: 2200, eta: '1 hr', capacity: 'Wet Land' },
-                { id: 'reaper', name: 'Reaper Binder', price: 800, eta: '30 min', capacity: 'Straw Binder' },
-                { id: 'thresher', name: 'Multi-Crop Thresher', price: 700, eta: '20 min', capacity: 'Paddy/Wheat' }
-            ]
-        },
-        {
-            id: 'hulage',
-            title: { en: 'Haulage & Transport', hi: 'ढुलाई', or: 'ପରିବହନ' },
-            icon: Truck,
-            desc: { en: 'Trolley, Tanker', hi: 'ट्रॉली, टैंकर', or: 'ଟ୍ରଲି' },
-            machines: [
-                { id: 'trolley_h', name: 'Hydraulic Trolley', price: 500, eta: '10 min', capacity: '10 Ton' },
-                { id: 'tanker', name: 'Water Tanker', price: 400, eta: '15 min', capacity: '5000L' }
-            ]
-        },
-        {
-            id: 'spray',
-            title: { en: 'Spraying', hi: 'छिड़काव', or: 'ଔଷଧ ସିଞ୍ଚନ' },
-            icon: Settings,
-            desc: { en: 'Boom Sprayer, Drone', hi: 'बूम स्प्रेयर, ड्रोन', or: 'ସ୍ପ୍ରେୟାର' },
-            machines: [
-                { id: 'boom', name: 'Tractor Boom Sprayer', price: 600, eta: '20 min', capacity: '500L' },
-                { id: 'drone', name: 'Agri-Drone', price: 1500, eta: '1 day', capacity: '10L' }
-            ]
-        }
-    ];
+        // Receipt ID & Date
+        doc.setTextColor(...secondaryColor);
+        doc.setFontSize(14);
+        doc.text('SERVICE COMPLETION RECEIPT', 20, 55);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Booking ID: TRC-${Math.floor(Math.random() * 90000) + 10000}`, 20, 62);
+        doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 67);
+        doc.text(`Farmer: ${village} (Plot: ${plotNo})`, 20, 72);
 
-    const drivers = [
-        { name: 'Raju Bhai', rating: 4.8, vehicle: 'Mahindra 575', phone: '9876543210', id: 'DL-01' },
-        { name: 'Suresh Kumar', rating: 4.5, vehicle: 'Sonalika DI', phone: '9123456780', id: 'OD-05' },
-        { name: 'Bikram Jena', rating: 4.9, vehicle: 'John Deere', phone: '7008123456', id: 'OD-02' }
-    ];
+        // Horizontal Line
+        doc.setDrawColor(203, 213, 225);
+        doc.line(20, 80, 190, 80);
 
-    // Handlers
-    const handleSearch = (e) => {
-        e.preventDefault();
-        if (location.trim()) setStage('category');
+        // Service Details
+        doc.setFont('helvetica', 'bold');
+        doc.text('SERVICE SPECIFICATIONS', 20, 90);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Equipment: Mahindra Arjun 605 DI (Modern Plow)`, 25, 100);
+        doc.text(`Location: Area of ${village}`, 25, 107);
+        doc.text(`Status: Service Successfully Completed`, 25, 114);
+
+        // Work Log
+        doc.setFont('helvetica', 'bold');
+        doc.text('WORK LOG', 20, 130);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Time Started: ${new Date(Date.now() - 3600000).toLocaleTimeString()}`, 25, 140);
+        doc.text(`Time Finished: ${new Date().toLocaleTimeString()}`, 25, 147);
+        doc.text(`Duration: ${finalHours} Hours`, 25, 154);
+
+        // Billing Table
+        doc.setFillColor(248, 250, 252);
+        doc.rect(20, 170, 170, 40, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.text('BILLING SUMMARY', 20, 165);
+        
+        doc.text('Description', 25, 180);
+        doc.text('Hourly Rate', 110, 180);
+        doc.text('Amount', 160, 180);
+        
+        doc.setFont('helvetica', 'normal');
+        doc.line(20, 183, 190, 183);
+        doc.text(`Tractor Rental (${finalHours} hrs)`, 25, 192);
+        doc.text(`₹${hourlyRate}/hr`, 110, 192);
+        doc.text(`₹${finalTotal}`, 160, 192);
+
+        // Total
+        doc.setFillColor(...primaryColor);
+        doc.rect(140, 220, 50, 15, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.text(`TOTAL: ₹${finalTotal}`, 145, 230);
+
+        // Footer
+        doc.setTextColor(100, 116, 139);
+        doc.setFontSize(8);
+        doc.text('This receipt is a valid proof of service for Odisha Agriculture Subsidy claims.', 105, 275, { align: 'center' });
+        doc.text('GramAI Mechanization Program.', 105, 280, { align: 'center' });
+        doc.text('Support: 1800-GRM-PRO-AGRI', 105, 285, { align: 'center' });
+
+        doc.save(`GramAI_TractorReceipt_${plotNo || 'Village'}.pdf`);
+        toast.success("Tractor Receipt Downloaded!");
     };
 
-    const handleCategorySelect = (cat) => {
-        setSelectedCategory(cat);
-        setStage('select');
-    };
+    const { balance, spendFunds } = useWallet();
 
-    const handleBook = (type, pMode = null) => {
-        setSelectedType(type);
-        if (pMode) {
-            setPaymentMode(pMode);
-            setStage('finding');
-
-            // Simulate Finding Driver
-            setTimeout(() => {
-                const randomDriver = drivers[Math.floor(Math.random() * drivers.length)];
-                setDriver(randomDriver);
-                setStage('arriving');
-                toast.success("Machinery Found!");
-            }, 3000);
-        } else {
-            setStage('payment');
-        }
-    };
-
-    const handleComplete = () => {
+    const handleFinishWork = () => {
+        spendFunds(finalTotal, `Tractor Service: ${village}`);
         setStage('completed');
     };
 
-    const downloadReceipt = () => {
-        try {
-            const doc = new jsPDF();
-            doc.setFontSize(22);
-            doc.text("GramAI - Farm Service Receipt", 20, 20);
+    const getVal = (v) => v[lang] || v['en'] || v;
 
-            doc.setFontSize(14);
-            doc.text(`Booking ID: #${Date.now()}`, 20, 40);
-            doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 50);
-            doc.text(`Location: ${location}`, 20, 60);
+    const handleLocationSelect = (item) => {
+        setVillage(item.name.split(',')[0]);
+        setLocation(item.name);
+        setMapCenter({ lat: item.lat, lng: item.lng, name: item.name });
+    };
 
-            doc.line(20, 70, 190, 70);
-
-            doc.text(`Service: ${selectedCategory?.title['en']}`, 20, 80);
-            doc.text(`Machine: ${selectedType?.name}`, 20, 90);
-            doc.text(`Provider: ${driver?.name}`, 20, 100);
-            doc.text(`Rate: Rs. ${selectedType?.price}/hr`, 20, 110);
-
-            doc.line(20, 120, 190, 120);
-
-            doc.setFontSize(16);
-            doc.text(`Total Paid: Rs. ${selectedType?.price}`, 140, 140);
-
-            doc.save("gramai-receipt.pdf");
-            toast.success("Receipt Downloaded!");
-        } catch (err) {
-            console.error(err);
-            toast.error("Download failed. Try again.");
+    useEffect(() => {
+        if (stage === 'finding') {
+            const t3 = setTimeout(() => { setStage('arriving'); toast.success('🚜 ' + l.arriving); }, 4500);
+            return () => clearTimeout(t3);
         }
-    };
+    }, [stage, l.arriving]);
 
-    // Translations helper
-    const t_ui = {
-        search: { en: 'Farm location for service?', hi: 'सेवा के लिए खेत का स्थान?', or: 'ସେବା ପାଇଁ ଫାର୍ମର ସ୍ଥାନ?' },
-        category: { en: 'Select Service Type', hi: 'सेवा का प्रकार चुनें', or: 'ସେବା ପ୍ରକାର ଚୟନ କରନ୍ତୁ' },
-        choose: { en: 'Choose Machinery', hi: 'मशीन चुनें', or: 'ଯନ୍ତ୍ର ବାଛନ୍ତୁ' },
-        finding: { en: 'Finding Nearby Providers...', hi: 'पास के प्रदाता खोज रहे हैं...', or: 'ନିକଟସ୍ଥ ପ୍ରଦାତା ଖୋଜା ଚାଲିଛି...' },
-        arriving: { en: 'Provider is arriving!', hi: 'प्रदाता आ रहा है!', or: 'ପ୍ରଦାତା ଆସୁଛନ୍ତି!' },
-        complete: { en: 'Service Completed', hi: 'सेवा पूर्ण हुई', or: 'ସେବା ସମ୍ପୂର୍ଣ୍ଣ ହେଲା' },
-        download: { en: 'Download Bill', hi: 'बिल डाउनलोड करें', or: 'ବିଲ୍ ଡାଉନଲୋଡ୍ କରନ୍ତୁ' }
-    };
-    const getVal = (obj) => obj[lang] || obj['en'];
+    useEffect(() => {
+        if (stage === 'inprogress') {
+            setWorkProgress(0);
+            progressRef.current = setInterval(() => {
+                setWorkProgress(p => { if (p >= 100) { clearInterval(progressRef.current); return 100; } return p + 1; });
+            }, 180);
+            return () => clearInterval(progressRef.current);
+        }
+    }, [stage]);
 
-    const handleUseMyLocation = () => {
-        if ('geolocation' in navigator) {
-            toast.info("📍 Locating you...");
+    const handleSearch = (e) => { e.preventDefault(); if (!village.trim()) { toast.warn(l.villagePlaceholder); return; } setLocation(village); setStage('category'); };
+
+    const handleGPS = () => {
+        setLocating(true);
+        toast.info(lang === 'or' ? '📍 ପ୍ରକୃତ ସ୍ଥାନ ଖୋଜା ଚାଲିଛି...' : '📍 Fetching precise real-time location...');
+
+        if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
                     const { latitude, longitude } = position.coords;
-
                     try {
-                        // Reverse Geocoding via Nominatim (OpenStreetMap)
-                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
-                        const data = await response.json();
-
-                        // Extract address parts (Village, District, State)
-                        const address = data.address || {};
-                        const place = address.village || address.town || address.city || address.county;
-                        const district = address.state_district || address.state;
-
-                        let formattedAddress = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-                        if (place && district) {
-                            formattedAddress = `${place}, ${district}`;
-                        }
-
-                        setLocation(formattedAddress);
-                        setStage('category');
-                        toast.success("Location: " + formattedAddress);
+                        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                        const data = await res.json();
+                        const addr = data.address;
+                        const placeName = addr.village || addr.suburb || addr.town || addr.city || 'My Farm';
+                        const distName = addr.state_district || addr.county || 'Bhubaneswar';
+                        const fullLoc = `${placeName}, ${distName}`;
+                        setVillage(placeName); setLocation(fullLoc); setLocating(false); setStage('category');
+                        toast.success(`${l.loc_fixed}: ${fullLoc}`);
                     } catch (err) {
-                        console.error('Geocoding Error:', err);
-                        // Fallback to coords if API fails
-                        setLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
-                        setStage('category');
-                        toast.success("Location Coords Found!");
+                        setVillage('Patia'); setLocation('Patia, Bhubaneswar'); setLocating(false); setStage('category');
+                        toast.success('📍 Patia, Bhubaneswar');
                     }
                 },
-                (error) => {
-                    console.warn("GPS Error:", error.message);
-                    if (error.code === 1) {
-                        toast.warn("GPS Access Denied. Please enter location manually.");
-                    } else {
-                        toast.error("Could not fetch location. Try again.");
-                    }
+                (err) => {
+                    setLocating(false); setVillage('Patia'); setLocation('Patia, Bhubaneswar'); setStage('category');
+                    toast.error(lang === 'or' ? 'GPS ମିଳିଲା ନାହିଁ, ହାତରେ ଲେଖନ୍ତୁ' : 'GPS error. Using Demo Location: Patia');
                 }
             );
         } else {
-            toast.error("GPS not supported.");
+            setLocating(false); toast.error('GPS not supported');
         }
     };
 
-    const [showHelpModal, setShowHelpModal] = useState(false);
-
-    const handleReport = (issue) => {
-        toast.info("Processing report...", { autoClose: 1000 });
-        setTimeout(() => {
-            if (issue === 'extra_money') {
-                toast.error("🚨 ALERT: Admin Notified! Driver Flagged for investigation.", { autoClose: 5000 });
-            } else {
-                toast.success("Support ticket raised. We will call you shortly.");
-            }
-            setShowHelpModal(false);
-        }, 1500);
+    const handleCall = () => {
+        toast.info(`Calling ${getVal(DRIVER.name)}...`);
+        // Simulate a call timeout then show feedback
+        setTimeout(() => setShowCallFeedback(true), 2500);
     };
 
+    const submitFeedback = () => {
+        if (!callOutcome) return;
+        toast.success(lang === 'or' ? 'ଫିଡବ୍ୟାକ୍ ଗ୍ରହଣ କରାଗଲା' : 'Feedback recorded. Admin notified.');
+        setShowCallFeedback(false);
+    };
+
+    const handleCatSelect = (cat) => { setSelectedCat(cat); setStage('select'); };
+    const handleBook = (machine) => { setSelectedMachine(machine); setStage('payment'); };
+    const handlePay = (mode) => { setPaymentMode(mode); setStage('finding'); };
+    const resetAll = () => { setStage('search'); setVillage(''); setPlotNo(''); setLocation(''); setLandSize('1'); setSelectedCat(null); setSelectedMachine(null); setWorkProgress(0); setUserRating(0); setIsGroup(false); setShowCallFeedback(false); setCallOutcome(null); };
+
+    // Real-feel logic for hackathon demo
+    const hourlyRate = selectedMachine ? (isGroup ? Math.round(selectedMachine.price * 0.8) : selectedMachine.price) : 0;
+    const estHours = parseFloat(landSize) * (landUnit === 'acre' ? 1.5 : 0.04); // Rough estimate: 1.5hr per acre
+    const estTotal = Math.round(hourlyRate * estHours);
+
+    // Final bill simulation (randomly slightly different for realism)
+    const finalHours = (estHours * (0.95 + Math.random() * 0.1)).toFixed(1);
+    const finalTotal = Math.round(hourlyRate * finalHours);
+
     return (
-        <div className="relative h-[calc(100vh-100px)] w-full overflow-hidden flex flex-col">
-            {/* Map Background */}
+        <div className="relative h-[calc(100vh-100px)] w-full overflow-hidden flex flex-col font-sans">
             <div className="absolute inset-0 z-0">
-                <GpsMap
-                    activeTrack={stage === 'arriving' ? { pos: 50, owner: driver?.name || 'Driver' } : null}
-                    className="h-full w-full rounded-none border-none shadow-none z-0"
+                <GpsMap 
+                    activeTrack={['arriving', 'inprogress'].includes(stage) ? { pos: 50, owner: getVal(DRIVER.name) } : null}
+                    className="h-full w-full rounded-none border-none shadow-none z-0" 
+                    externalCenter={mapCenter}
+                    onLocationChange={(loc) => {
+                        // Sync UI if map is searched directly
+                        setVillage(loc.name?.split(',')[0] || '');
+                        setLocation(loc.name || '');
+                    }}
                 />
             </div>
 
-            {/* Stage 1: Location Search (Overlay) */}
             <AnimatePresence>
                 {stage === 'search' && (
-                    <motion.div
-                        initial={{ y: 100, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: -100, opacity: 0 }}
-                        className="absolute bottom-0 left-0 right-0 z-20 p-6 bg-gradient-to-t from-black/50 to-transparent flex justify-center"
-                    >
-                        <div className="w-full max-w-xl bg-white dark:bg-slate-900 p-6 rounded-[2rem] shadow-2xl">
-                            <h2 className="text-2xl font-black mb-4">{getVal(t_ui.search)}</h2>
-                            <form onSubmit={handleSearch} className="flex flex-col gap-3">
-                                <div className="flex gap-2">
-                                    <div className="flex-1 bg-slate-100 dark:bg-slate-800 p-4 rounded-2xl flex items-center gap-3">
-                                        <div className="w-2 h-2 bg-black dark:bg-white rounded-full"></div>
-                                        <input
-                                            type="text"
-                                            value={location}
-                                            onChange={(e) => setLocation(e.target.value)}
-                                            placeholder="Enter village or plot no..."
-                                            className="bg-transparent outline-none flex-1 font-bold text-lg"
-                                            autoFocus
-                                        />
-                                        <MapPin className="text-slate-400" />
-                                    </div>
-                                    <button type="submit" className="bg-black dark:bg-white text-white dark:text-black p-4 rounded-2xl md:px-8 font-black flex items-center gap-2">
-                                        <ArrowRight />
-                                    </button>
-                                </div>
+                    <motion.div initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -40, opacity: 0 }}
+                        className="absolute bottom-0 left-0 right-0 z-20 p-4 bg-gradient-to-t from-black/20 to-transparent flex justify-center">
+                        <div className="w-full max-w-md bg-white dark:bg-slate-900 p-5 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 bg-green-500 rounded-2xl flex items-center justify-center shadow-lg"><Tractor className="w-5 h-5 text-white" /></div>
+                                <div><h2 className="text-lg font-black">{l.rentTractor}</h2><p className="text-[10px] text-slate-500 font-bold">{l.nearbyProviders}</p></div>
+                                <div className="ml-auto flex items-center gap-1 bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded-full"><Signal className="w-3 h-3 text-green-600 animate-pulse" /><span className="text-[9px] font-black text-green-700 dark:text-green-400">Stable</span></div>
+                            </div>
 
-                                <button
-                                    type="button"
-                                    onClick={handleUseMyLocation}
-                                    className="flex items-center justify-center gap-2 py-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl font-bold text-sm hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
-                                >
-                                    <Navigation className="w-4 h-4" /> Use Current Location
+                            <form onSubmit={handleSearch} className="space-y-3">
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div className="col-span-2">
+                                        <LocationSearch 
+                                            placeholder={l.villagePlaceholder}
+                                            initialValue={village}
+                                            onSelect={handleLocationSelect}
+                                        />
+                                    </div>
+                                    <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-3 flex items-center gap-3 border border-transparent focus-within:border-green-400">
+                                        <FileText className="w-4 h-4 text-slate-400 shrink-0" /><input value={plotNo} onChange={e => setPlotNo(e.target.value)} placeholder={l.plotPlaceholder} className="bg-transparent outline-none flex-1 font-bold text-xs" />
+                                    </div>
+                                    <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-3 flex items-center gap-2 border border-transparent focus-within:border-green-400">
+                                        <p className="text-[10px] font-black text-slate-400 shrink-0">{l.landSize}</p>
+                                        <input type="number" step="0.5" value={landSize} onChange={e => setLandSize(e.target.value)} className="bg-transparent outline-none flex-1 font-bold text-xs w-full" />
+                                    </div>
+                                    <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-1 flex items-center gap-1">
+                                        {['acre', 'guntha'].map(u => (
+                                            <button key={u} type="button" onClick={() => setLandUnit(u)}
+                                                className={`flex-1 py-2 rounded-xl text-[9px] font-black transition-all ${landUnit === u ? 'bg-white dark:bg-slate-700 shadow-sm text-green-600' : 'text-slate-400'}`}>
+                                                {l[u]}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <button type="button" onClick={() => setIsGroup(!isGroup)}
+                                    className={`w-full flex items-center gap-3 p-3 rounded-2xl border transition-all ${isGroup ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' : 'bg-slate-50 border-transparent dark:bg-slate-800'}`}>
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isGroup ? 'bg-green-500 text-white' : 'bg-slate-200 text-slate-400 dark:bg-slate-700'}`}><Users className="w-4 h-4" /></div>
+                                    <div className="text-left flex-1"><p className="text-xs font-black">{l.groupBooking}</p><p className="text-[9px] text-slate-500">{l.groupHelp}</p></div>
+                                    <div className={`w-9 h-5 rounded-full p-1 transition-colors ${isGroup ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'}`}><div className={`w-3 h-3 bg-white rounded-full transition-all ${isGroup ? 'translate-x-4' : 'translate-x-0'}`} /></div>
                                 </button>
+                                <div className="flex gap-2">
+                                    <button type="button" onClick={handleGPS} disabled={locating} className="flex-1 py-3 bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition-colors">
+                                        {locating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Navigation className="w-3 h-3" />} {l.useGPS}
+                                    </button>
+                                    <button type="submit" className="flex-[1.5] py-3 bg-green-500 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-green-100 dark:shadow-green-900/20">{l.findMachinery} <ArrowRight className="w-3 h-3" /></button>
+                                </div>
                             </form>
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Stage 2: Category Selection */}
             <AnimatePresence>
+                {(stage === 'category' || stage === 'select' || stage === 'payment') && (
+                    <div className="absolute top-4 left-4 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 py-2 rounded-full border border-slate-100 dark:border-slate-800 shadow-xl flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        <p className="text-[10px] font-black uppercase tracking-tighter text-slate-600 dark:text-slate-300 truncate max-w-[150px]">{l.loc_fixed}: {location || 'Farm'}</p>
+                    </div>
+                )}
+
                 {stage === 'category' && (
-                    <motion.div
-                        initial={{ y: '100%' }}
-                        animate={{ y: 0 }}
-                        exit={{ y: '100%' }}
-                        className="absolute bottom-0 left-0 right-0 md:left-auto md:right-6 md:bottom-6 md:w-[450px] md:h-[80vh] md:rounded-[2.5rem] z-20 bg-white dark:bg-slate-900 rounded-t-[2.5rem] p-6 shadow-2xl border-t border-slate-200 dark:border-slate-800 h-[70vh]"
-                    >
-                        <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-6"></div>
-                        <div className="flex items-center justify-between mb-4 px-2">
-                            <h3 className="text-xl font-black">{getVal(t_ui.category)}</h3>
-                            <button onClick={() => setStage('search')} className="p-2 hover:bg-slate-100 rounded-full"><X className="w-5 h-5" /></button>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3 overflow-y-auto h-[55vh] md:h-[65vh] pb-10">
-                            {farmCategories.map(cat => (
-                                <button
-                                    key={cat.id}
-                                    onClick={() => handleCategorySelect(cat)}
-                                    className="flex flex-col items-center p-4 bg-slate-50 dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 hover:border-primary-500 hover:shadow-lg transition-all"
-                                >
-                                    <div className="w-14 h-14 bg-white dark:bg-slate-700 rounded-2xl flex items-center justify-center mb-3 shadow-sm">
-                                        <cat.icon className="w-7 h-7 text-primary-600 dark:text-primary-400" />
-                                    </div>
-                                    <h4 className="font-bold text-sm text-center mb-1">{cat.title[lang] || cat.title['en']}</h4>
-                                    <p className="text-[10px] text-slate-500 font-medium text-center">{cat.desc[lang] || cat.desc['en']}</p>
-                                </button>
-                            ))}
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Stage 3: Vehicle Selection */}
-            <AnimatePresence>
-                {stage === 'select' && selectedCategory && (
-                    <motion.div
-                        initial={{ y: '100%' }}
-                        animate={{ y: 0 }}
-                        exit={{ y: '100%' }}
-                        className="absolute bottom-0 left-0 right-0 md:left-auto md:right-6 md:bottom-6 md:w-[450px] md:rounded-[2.5rem] z-50 bg-white dark:bg-slate-900 rounded-t-[2.5rem] p-6 shadow-2xl border-t border-slate-200 dark:border-slate-800"
-                    >
-                        <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-6"></div>
-                        <div className="flex items-center gap-3 mb-6 px-2">
-                            <button onClick={() => setStage('category')} className="p-2 hover:bg-slate-100 rounded-full">
-                                <ArrowRight className="w-5 h-5 rotate-180" />
-                            </button>
-                            <div>
-                                <h3 className="text-xl font-black">{selectedCategory.title[lang] || selectedCategory.title['en']}</h3>
-                                <p className="text-sm text-slate-500 font-bold">{getVal(t_ui.choose)}</p>
+                    <SlidePanel>
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => setStage('search')} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"><ArrowRight className="w-4 h-4 rotate-180" /></button>
+                                <h3 className="text-lg font-black">{l.selectService}</h3>
                             </div>
+                            <button onClick={resetAll} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full"><X className="w-4 h-4" /></button>
                         </div>
-
-                        <div className="space-y-3 mb-6 max-h-[60vh] overflow-y-auto">
-                            {selectedCategory.machines.map(v => (
-                                <button
-                                    key={v.id}
-                                    onClick={() => handleBook(v)}
-                                    className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200 transition-all text-left group"
-                                >
-                                    <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                        <Tractor className="w-8 h-8 text-slate-700 dark:text-slate-300" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <h4 className="font-bold text-lg">{v.name} <span className="text-xs font-normal text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg ml-2">{v.capacity}</span></h4>
-                                        <p className="text-sm font-medium text-green-600">{v.eta} away</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="font-black text-xl">₹{v.price}</p>
-                                        <p className="text-xs text-slate-400 font-bold">/hr</p>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    </motion.div>
+                        {isGroup && <div className="bg-green-500 text-white p-3 rounded-2xl mb-4 flex items-center gap-3 shadow-lg"><Users className="w-5 h-5" /><p className="text-xs font-black">{l.groupActive}</p></div>}
+                        <div className="grid grid-cols-3 gap-2">{CATEGORIES.map(cat => (<button key={cat.id} onClick={() => handleCatSelect(cat)} className="flex flex-col items-center p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl hover:border-green-400 border border-transparent transition-all group "><div className="w-10 h-10 bg-white dark:bg-slate-700 rounded-xl flex items-center justify-center mb-2 shadow-sm group-hover:scale-110"><cat.Icon className="w-5 h-5 text-green-600" /></div><h4 className="font-bold text-[10px] text-center">{getVal(cat.label)}</h4></button>))}</div>
+                    </SlidePanel>
                 )}
-            </AnimatePresence>
 
-            {/* Stage 4: Payment Selection */}
-            <AnimatePresence>
-                {stage === 'payment' && selectedType && (
-                    <motion.div
-                        initial={{ y: '100%' }}
-                        animate={{ y: 0 }}
-                        exit={{ y: '100%' }}
-                        className="absolute bottom-0 left-0 right-0 md:left-auto md:right-6 md:bottom-6 md:w-[450px] md:rounded-[2.5rem] z-50 bg-white dark:bg-slate-900 rounded-t-[2.5rem] p-6 shadow-2xl border-t border-slate-200 dark:border-slate-800"
-                    >
-                        <div className="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-6"></div>
-                        <div className="flex items-center gap-3 mb-6 px-2">
-                            <button onClick={() => setStage('select')} className="p-2 hover:bg-slate-100 rounded-full">
-                                <ArrowRight className="w-5 h-5 rotate-180" />
-                            </button>
-                            <div>
-                                <h3 className="text-xl font-black">Payment Method</h3>
-                                <p className="text-sm text-slate-500 font-bold">Select how to pay</p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-4 mb-6">
-                            <button
-                                onClick={() => handleBook(selectedType, 'cash')}
-                                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all group"
-                            >
-                                <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400">
-                                    <div className="font-black text-lg">₹</div>
-                                </div>
-                                <div className="flex-1 text-left">
-                                    <h4 className="font-bold text-lg">Cash / UPI</h4>
-                                    <p className="text-xs text-slate-500">Pay directly to provider</p>
-                                </div>
-                                <div className="w-6 h-6 rounded-full border-2 border-slate-300 group-hover:border-green-500 group-hover:bg-green-500 transition-colors"></div>
-                            </button>
-
-                            <button
-                                onClick={() => handleBook(selectedType, 'credit')}
-                                className="w-full flex items-center gap-4 p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 hover:border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-all group relative overflow-hidden"
-                            >
-                                <div className="absolute -right-6 -top-6 w-20 h-20 bg-amber-500/10 rounded-full blur-2xl"></div>
-                                <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
-                                    <ShieldCheck className="w-6 h-6" />
-                                </div>
-                                <div className="flex-1 text-left">
-                                    <h4 className="font-bold text-lg text-amber-700 dark:text-amber-400">Kisan Credit / Pay Later</h4>
-                                    <p className="text-xs text-amber-600/70 dark:text-amber-400/70">
-                                        Pay within 6 Months (0% Interest).
-                                        <br />
-                                        <span className="text-[10px] text-red-500 font-bold">*After 6 months, 2% monthly interest applies.</span>
-                                    </p>
-                                </div>
-                                <div className="w-6 h-6 rounded-full border-2 border-amber-300 group-hover:border-amber-500 group-hover:bg-amber-500 transition-colors"></div>
-                            </button>
-                        </div>
-                    </motion.div>
+                {stage === 'select' && selectedCat && (
+                    <SlidePanel><div className="flex items-center gap-3 mb-4"><button onClick={() => setStage('category')} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"><ArrowRight className="w-4 h-4 rotate-180" /></button><h3 className="text-lg font-black">{getVal(selectedCat.label)}</h3></div><div className="space-y-2 max-h-[60vh] overflow-y-auto pb-4">{selectedCat.machines.map(m => (<button key={m.id} onClick={() => handleBook(m)} className="w-full flex items-center gap-3 p-3 rounded-2xl border hover:border-green-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all text-left"><div className="w-12 h-12 bg-slate-100 dark:bg-slate-700 rounded-xl flex items-center justify-center text-2xl shrink-0">🚜</div><div className="flex-1 min-w-0"><div className="flex items-center gap-2 mb-0.5 overflow-hidden"><h4 className="font-black text-xs truncate">{getVal(m.name)}</h4><Badge text={getVal(m.badge)} bc={m.bc} /></div><p className="text-[10px] text-slate-500 truncate">{getVal(m.desc)}</p><div className="flex items-center justify-between mt-1"><div className="flex items-center gap-2"><StarRow rating={m.rating} size={2.5} /><span className="text-[9px] font-bold text-slate-400">{getVal(m.eta)}</span></div><div className="text-right"><p className="font-black text-sm text-green-600">₹{isGroup ? Math.round(m.price * 0.8) : m.price}<span className="text-[8px] text-slate-400">/hr</span></p></div></div></div></button>))}</div></SlidePanel>
                 )}
-            </AnimatePresence>
 
-            {/* Stage 5: Finding Animation */}
-            <AnimatePresence>
+                {stage === 'payment' && selectedMachine && (
+                    <SlidePanel>
+                        <div className="flex items-center gap-3 mb-4">
+                            <button onClick={() => setStage('select')} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"><ArrowRight className="w-4 h-4 rotate-180" /></button>
+                            <h3 className="text-lg font-black">{l.paymentMethod}</h3>
+                        </div>
+                        <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 mb-4 border border-dashed border-slate-300">
+                            <div className="flex justify-between items-center mb-1"><span className="text-[10px] font-bold text-slate-500">{l.rate}</span><span className="text-xs font-black">₹{hourlyRate}/hr</span></div>
+                            <div className="flex justify-between items-center mb-1"><span className="text-[10px] font-bold text-slate-500">{l.estTime}</span><span className="text-xs font-black">{estHours.toFixed(1)} hrs</span></div>
+                            <div className="flex justify-between items-center pt-2 border-t border-slate-200"><span className="text-xs font-black">{l.estCost}</span><span className="text-xl font-black text-green-600">₹{estTotal}*</span></div>
+                            <p className="text-[8px] text-slate-400 mt-1 italic">*Final cost based on actual time taken</p>
+                        </div>
+                        <div className="space-y-2">
+                            <button onClick={() => handlePay('cash')} className="w-full flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border hover:border-green-500 transition-all"><div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center text-green-600 font-black">₹</div><div className="text-left"><p className="text-xs font-black">{l.cashUPI}</p><p className="text-[9px] text-slate-500">Pay directly after service</p></div></button>
+                            <button onClick={() => handlePay('credit')} className="w-full flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border hover:border-amber-500 transition-all"><div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center"><ShieldCheck className="w-5 h-5 text-amber-600" /></div><div className="text-left"><p className="text-xs font-black">{l.kisanCredit}</p><p className="text-[9px] text-slate-500">{l.payLaterDesc}</p></div></button>
+                        </div>
+                    </SlidePanel>
+                )}
+
                 {stage === 'finding' && (
-                    <motion.div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center">
-                        <motion.div
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] flex flex-col items-center max-w-sm w-full mx-4"
-                        >
-                            <div className="relative mb-6">
-                                <div className="absolute inset-0 bg-primary-500 rounded-full animate-ping opacity-20"></div>
-                                <div className="absolute inset-0 bg-primary-500 rounded-full animate-ping opacity-20 delay-150"></div>
-                                <div className="w-24 h-24 bg-primary-50 dark:bg-primary-900/20 rounded-full flex items-center justify-center relative z-10">
-                                    <Navigation className="w-10 h-10 text-primary-600 animate-pulse" />
-                                </div>
-                            </div>
-                            <h3 className="text-xl font-black text-center mb-2">{getVal(t_ui.finding)}</h3>
-                            <p className="text-slate-400 text-center text-sm font-bold">Matching with nearest provider...</p>
-                            {paymentMode === 'credit' && (
-                                <div className="mt-4 px-4 py-2 bg-amber-100 text-amber-700 rounded-full text-xs font-bold flex items-center gap-2">
-                                    <ShieldCheck className="w-3 h-3" /> Pay Later Applied
-                                </div>
-                            )}
-                        </motion.div>
-                    </motion.div>
+                    <div className="absolute inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-6"><motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] w-full max-w-sm text-center"><div className="w-20 h-20 bg-green-50 dark:bg-green-900/20 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 animate-pulse">🚜</div><h3 className="text-lg font-black mb-1">{isGroup ? l.joining : l.finding}</h3><p className="text-slate-400 text-xs font-bold mb-6">{l.matching}</p><div className="w-10 h-1.5 bg-green-500 rounded-full mx-auto animate-bounce" /></motion.div></div>
                 )}
-            </AnimatePresence>
 
-            {/* Stage 6: Arriving Provider Info */}
-            <AnimatePresence>
                 {stage === 'arriving' && (
-                    <motion.div
-                        initial={{ y: '100%' }}
-                        animate={{ y: 0 }}
-                        className="absolute bottom-0 left-0 right-0 md:left-auto md:right-6 md:bottom-6 md:w-[450px] md:rounded-[2.5rem] z-50 bg-white dark:bg-slate-900 rounded-t-[2.5rem] p-6 shadow-2xl border-t border-slate-200 dark:border-slate-800"
-                    >
-                        <div className="flex items-center justify-between mb-6">
-                            <div>
-                                <h3 className="text-2xl font-black">{getVal(t_ui.arriving)}</h3>
-                                <p className="text-sm font-bold text-slate-400">{selectedType?.name} is on the way</p>
+                    <SlidePanel>
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => setStage('payment')} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"><ArrowRight className="w-4 h-4 rotate-180" /></button>
+                                <h3 className="text-lg font-black text-green-600">{l.arriving}</h3>
                             </div>
-                            <div className="bg-black dark:bg-white text-white dark:text-black px-4 py-2 rounded-xl font-black text-lg">
-                                {selectedType?.eta}
-                            </div>
+                            <div className="text-right bg-black text-white px-3 py-1 rounded-xl"><p className="text-[9px] opacity-60 uppercase">{l.eta}</p><p className="font-black text-sm">{getVal(selectedMachine.eta)}</p></div>
                         </div>
-
-                        {/* Provider Card */}
-                        <div className="bg-slate-50 dark:bg-slate-800 p-5 rounded-3xl flex items-center gap-4 mb-6">
-                            <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center">
-                                <User className="w-8 h-8 text-slate-500" />
-                            </div>
-                            <div className="flex-1">
-                                <h4 className="font-bold text-lg">{driver?.name}</h4>
-                                <p className="text-sm text-slate-500 font-bold">{driver?.vehicle} • {driver?.id}</p>
-                                <div className="flex items-center gap-1 text-amber-500 mt-1">
-                                    <Star className="w-4 h-4 fill-current" />
-                                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{driver?.rating}</span>
-                                </div>
-                            </div>
-                            <button className="p-3 bg-green-500 text-white rounded-full shadow-lg hover:scale-105 transition-transform">
-                                <Phone className="w-5 h-5" />
-                            </button>
+                        <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-3 flex items-center gap-3 mb-4">
+                            <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white font-black text-sm shrink-0">{DRIVER.avatar}</div>
+                            <div className="flex-1 min-w-0"><h4 className="font-black text-xs">{getVal(DRIVER.name)}</h4><p className="text-[9px] text-slate-500 truncate">{getVal(DRIVER.vehicle)} • {getVal(DRIVER.distance)}</p></div>
+                            <button onClick={handleCall} className="w-9 h-9 bg-green-500 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-all"><Phone className="w-4 h-4 text-white" /></button>
                         </div>
+                        <p className="text-[10px] text-slate-400 font-bold mb-3 px-1 text-center italic">{l.startWorkPrompt}</p>
+                        <button onClick={() => setStage('inprogress')} className="w-full py-3.5 bg-green-500 text-white rounded-2xl font-black text-sm shadow-xl">{l.startWorkBtn}</button>
 
-                        <div className="flex gap-4">
-                            <button onClick={() => setStage('search')} className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold text-slate-600">Cancel</button>
-                            <button onClick={handleComplete} className="flex-1 py-4 bg-black dark:bg-white text-white dark:text-black rounded-2xl font-bold">End Job (Demo)</button>
-                        </div>
+                        {/* Call Feedback Modal Layer */}
+                        <AnimatePresence>
+                            {showCallFeedback && (
+                                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                                    className="absolute inset-0 z-50 bg-white dark:bg-slate-900 rounded-[2rem] p-6 flex flex-col items-center justify-center text-center">
+                                    <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-4"><Phone className="w-8 h-8 text-blue-500" /></div>
+                                    <h3 className="text-xl font-black mb-1">{l.callFeedbackTitle}</h3>
+                                    <p className="text-slate-500 text-xs font-bold mb-6">{l.isComing}</p>
 
-                        {/* Help / Report Button */}
-                        <div className="mt-4 flex justify-center">
-                            <button
-                                onClick={() => setShowHelpModal(true)}
-                                className="flex items-center gap-2 text-red-500 font-bold text-sm bg-red-50 dark:bg-red-900/10 px-4 py-2 rounded-full hover:bg-red-100 transition-colors"
-                            >
-                                <AlertTriangle className="w-4 h-4" /> Report Issue / Help
-                            </button>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Help Modal */}
-            <AnimatePresence>
-                {showHelpModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-end md:items-center justify-center p-4"
-                    >
-                        <motion.div
-                            initial={{ y: 100 }}
-                            animate={{ y: 0 }}
-                            exit={{ y: 100 }}
-                            className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2.5rem] p-6 shadow-2xl"
-                        >
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
-                                    <AlertTriangle className="text-red-500" />
-                                    Report & Help
-                                </h3>
-                                <button onClick={() => setShowHelpModal(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full">
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-
-                            <p className="text-sm text-slate-500 font-bold mb-4">Select an issue to report to Admin:</p>
-
-                            <div className="space-y-3">
-                                <button
-                                    onClick={() => handleReport('extra_money')}
-                                    className="w-full text-left p-4 rounded-2xl bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 text-red-700 dark:text-red-400 font-bold hover:bg-red-100 transition-colors"
-                                >
-                                    💰 Driver asking extra money
-                                </button>
-                                <button
-                                    onClick={() => handleReport('rude')}
-                                    className="w-full text-left p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 font-bold hover:bg-slate-100 transition-colors"
-                                >
-                                    😡 Rude behavior / Unsafe
-                                </button>
-                                <button
-                                    onClick={() => handleReport('late')}
-                                    className="w-full text-left p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 font-bold hover:bg-slate-100 transition-colors"
-                                >
-                                    ⏰ Driver is late / Not responding
-                                </button>
-                            </div>
-
-                            <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800">
-                                <p className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Emergency Support</p>
-                                <a href="tel:1800-180-1551" className="flex items-center gap-3 p-4 bg-green-500 text-white rounded-2xl font-black hover:bg-green-600 transition-colors">
-                                    <Phone className="w-6 h-6" />
-                                    <div>
-                                        <p className="text-xs opacity-90">Kisan Toll Free</p>
-                                        <p className="text-lg">1800-180-1551</p>
+                                    <div className="w-full space-y-2 mb-6 text-left">
+                                        {[
+                                            { id: 'coming', label: l.coming, icon: ThumbsUp, color: 'text-green-500', bg: 'bg-green-50 dark:bg-green-900/20' },
+                                            { id: 'busy', label: l.busy, icon: PhoneOff, color: 'text-red-500', bg: 'bg-red-50 dark:bg-red-900/20' },
+                                            { id: 'wait', label: l.lateReply, icon: Timer, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/20' }
+                                        ].map(opt => (
+                                            <button key={opt.id} onClick={() => setCallOutcome(opt.id)}
+                                                className={`w-full flex items-center gap-3 p-4 rounded-2xl border transition-all ${callOutcome === opt.id ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md' : 'border-transparent bg-slate-50 dark:bg-slate-800'}`}>
+                                                <opt.icon className={`w-5 h-5 ${opt.color}`} />
+                                                <span className="text-xs font-black">{opt.label}</span>
+                                                {callOutcome === opt.id && <CheckCircle2 className="w-4 h-4 text-blue-500 ml-auto" />}
+                                            </button>
+                                        ))}
                                     </div>
-                                </a>
-                            </div>
 
-                        </motion.div>
-                    </motion.div>
+                                    <div className="flex gap-2 w-full">
+                                        <button onClick={() => setShowCallFeedback(false)} className="flex-1 py-3 bg-slate-100 dark:bg-slate-700 rounded-xl font-bold text-xs">Skip</button>
+                                        <button onClick={submitFeedback} disabled={!callOutcome} className="flex-[2] py-3 bg-blue-600 text-white rounded-xl font-black text-xs disabled:opacity-50">{l.submit}</button>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </SlidePanel>
                 )}
-            </AnimatePresence>
 
-            {/* Stage 7: Receipt Modal */}
-            <AnimatePresence>
+                {stage === 'inprogress' && (
+                    <SlidePanel>
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => setStage('arriving')} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"><ArrowRight className="w-4 h-4 rotate-180" /></button>
+                                <h3 className="text-lg font-black text-orange-500">{l.serviceStarted}</h3>
+                            </div>
+                            <Timer className="w-5 h-5 text-orange-500 animate-spin" />
+                        </div>
+                        <div className="mb-5"><div className="flex justify-between mb-2"><span className="text-[10px] font-black">{l.workProgress}: {workProgress}%</span><span className="text-[10px] font-bold text-orange-500">~20 {l.minsLeft}</span></div>
+                            <div className="h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden"><motion.div className="h-full bg-green-500" animate={{ width: `${workProgress}%` }} /></div></div>
+                        <p className="text-[10px] text-slate-400 font-bold mb-3 px-1 text-center italic">{l.finishWorkPrompt}</p>
+                        <button onClick={handleFinishWork} className="w-full py-3.5 bg-green-500 text-white rounded-2xl font-black text-sm">{l.finishWorkBtn}</button>
+                    </SlidePanel>
+                )}
+
                 {stage === 'completed' && (
-                    <motion.div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-6">
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-sm overflow-hidden"
-                        >
-                            <div className="bg-green-500 p-8 flex flex-col items-center text-white">
-                                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4">
-                                    <CheckCircle2 className="w-8 h-8 text-white" />
-                                </div>
-                                <h3 className="text-2xl font-black">{getVal(t_ui.complete)}</h3>
-                                <p className="font-medium opacity-90">{paymentMode === 'credit' ? 'Payment Scheduled (Pay Later)' : 'Total Paid'}</p>
-                                <h2 className="text-4xl font-black mt-2">₹{selectedType?.price}</h2>
+                    <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+                        <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-sm overflow-hidden border border-white/20">
+                            <div className="bg-green-500 p-6 flex flex-col items-center text-white relative">
+                                <CheckCircle2 className="w-12 h-12 mb-2" />
+                                <h3 className="text-xl font-black">{l.complete}</h3>
+                                <p className="text-3xl font-black mt-2">₹{finalTotal}</p>
                             </div>
-                            <div className="p-8">
-                                <div className="space-y-4 mb-8">
-                                    <div className="flex justify-between border-b border-dashed border-slate-200 pb-4">
-                                        <span className="text-slate-500 font-bold">Booking ID</span>
-                                        <span className="font-black">#83749</span>
-                                    </div>
-                                    <div className="flex justify-between border-b border-dashed border-slate-200 pb-4">
-                                        <span className="text-slate-500 font-bold">Service</span>
-                                        <span className="font-black">{selectedCategory?.title[lang] || 'Service'}</span>
-                                    </div>
-                                    <div className="flex justify-between border-b border-dashed border-slate-200 pb-4">
-                                        <span className="text-slate-500 font-bold">Payment</span>
-                                        <span className="font-black text-amber-600">{paymentMode === 'credit' ? 'Kisan Credit' : 'Cash/UPI'}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-500 font-bold">Duration</span>
-                                        <span className="font-black">1 hr (Est.)</span>
-                                    </div>
+                            <div className="p-5">
+                                <h4 className="text-[10px] font-black uppercase text-slate-400 mb-3">{l.finalBill}</h4>
+                                <div className="space-y-2 mb-6 bg-slate-50 dark:bg-slate-800 p-3 rounded-2xl">
+                                    <div className="flex justify-between text-[11px] font-bold"><span className="text-slate-500">{l.rate}</span><span>₹{hourlyRate}/hr</span></div>
+                                    <div className="flex justify-between text-[11px] font-bold"><span className="text-slate-500">{l.timeSpent}</span><span>{finalHours} hrs</span></div>
+                                    <div className="h-px bg-slate-200 dark:bg-slate-700 my-1" />
+                                    <div className="flex justify-between text-xs font-black"><span>{l.total}</span><span className="text-green-600">₹{finalTotal}</span></div>
+                                </div>
 
-                                    {/* Rating Section */}
-                                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-                                        <p className="text-center text-xs font-bold text-slate-400 mb-2 uppercase tracking-widest">Rate Service</p>
-                                        <div className="flex justify-center gap-2">
-                                            {[1, 2, 3, 4, 5].map((star) => (
-                                                <button
-                                                    key={star}
-                                                    onClick={() => toast.success(`Rated ${star} Stars! Thank you.`)}
-                                                    className="p-1 hover:scale-125 transition-transform"
-                                                >
-                                                    <Star className="w-8 h-8 text-amber-400 fill-amber-400" />
-                                                </button>
-                                            ))}
-                                        </div>
+                                <div className="flex flex-col items-center mb-6 py-4 border-y border-dashed border-slate-200 dark:border-slate-800">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase mb-3">{l.rateService}</p>
+                                    <div className="flex gap-2">
+                                        {[1, 2, 3, 4, 5].map(s => (
+                                            <button key={s} onClick={() => {
+                                                setUserRating(s);
+                                                toast.success(lang === 'or' ? 'ଧନ୍ୟବାଦ!' : 'Thank you for rating!');
+                                            }} className="transition-transform active:scale-90">
+                                                <Star className={`w-8 h-8 ${s <= userRating ? 'text-amber-400 fill-amber-400' : 'text-slate-200 dark:text-slate-700'}`} />
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
 
-                                <button
-                                    onClick={downloadReceipt}
-                                    className="w-full py-4 bg-black dark:bg-white text-white dark:text-black rounded-2xl font-black flex items-center justify-center gap-2 hover:scale-105 transition-transform"
-                                >
-                                    <Download className="w-5 h-5" />
-                                    {getVal(t_ui.download)}
-                                </button>
-                                <button
-                                    onClick={() => setStage('search')}
-                                    className="w-full py-4 mt-2 text-slate-400 font-bold hover:text-black dark:hover:text-white transition-colors"
-                                >
-                                    Book New Service
-                                </button>
-                                <button
-                                    onClick={() => setShowHelpModal(true)}
-                                    className="w-full py-2 text-red-400 font-bold text-xs hover:text-red-500 transition-colors"
-                                >
-                                    Report Issue
-                                </button>
+                                <div className="flex flex-col gap-2">
+                                    <button onClick={resetAll} className="w-full py-3.5 bg-green-500 text-white rounded-2xl font-black text-xs shadow-lg">{l.bookNew}</button>
+                                    <button onClick={handleDownloadReceipt} className="w-full py-3.5 bg-slate-100 dark:bg-slate-800 rounded-2xl font-black text-xs">{l.download}</button>
+                                </div>
                             </div>
                         </motion.div>
-                    </motion.div>
+                    </div>
                 )}
             </AnimatePresence>
         </div>

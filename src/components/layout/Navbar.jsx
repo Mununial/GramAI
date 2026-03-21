@@ -4,11 +4,15 @@ import { Bell, Search, Sun, Moon, User, Menu, LogOut, Settings } from 'lucide-re
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { useWallet } from '../../context/WalletContext';
+import { Wallet as WalletIcon, Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Navbar = ({ setSidebarOpen }) => {
     const { user, logout } = useAuth();
     const { isDark, toggleTheme } = useTheme();
     const { t, lang, setLang } = useLanguage();
+    const { balance } = useWallet();
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     const [showLangMenu, setShowLangMenu] = useState(false);
 
@@ -97,12 +101,28 @@ const Navbar = ({ setSidebarOpen }) => {
                     </button>
                 </div>
 
-                <div className="h-10 w-[1px] bg-slate-200 dark:bg-slate-800 mx-2 hidden sm:block"></div>
+                <Link 
+                    to="/wallet" 
+                    className="hidden sm:flex items-center gap-3 bg-slate-100 dark:bg-slate-800/80 px-4 py-2 rounded-2xl border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all group"
+                >
+                    <div className="bg-primary-600 p-1.5 rounded-lg text-white shadow-lg shadow-primary-600/20 group-hover:scale-110 transition-transform">
+                        <WalletIcon size={14} />
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase leading-none mb-0.5">Wallet Balance</p>
+                        <p className="text-sm font-black text-slate-900 dark:text-white leading-none italic">₹{balance.toLocaleString()}</p>
+                    </div>
+                    <div className="ml-1 bg-white dark:bg-slate-900 p-1 rounded-full text-primary-600 border border-primary-100 dark:border-primary-900 animate-pulse">
+                        <Plus size={10} strokeWidth={4} />
+                    </div>
+                </Link>
+
+                <div className="h-10 w-[1px] bg-slate-200 dark:bg-slate-800 mx-1 hidden sm:block"></div>
 
                 <div className="flex items-center gap-3 pl-2 relative">
                     <div className="text-right hidden sm:block">
-                        <p className="text-sm font-bold">{user?.name}</p>
-                        <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">{user?.role} Tier</p>
+                        <p className="text-sm font-black">{user?.name}</p>
+                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">{user?.role} Tier</p>
                     </div>
                     <button
                         type="button"

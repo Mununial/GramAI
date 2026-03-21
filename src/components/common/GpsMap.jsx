@@ -10,8 +10,9 @@ import {
     Building2, Landmark, CloudRain, Sprout,
     IndianRupee, Shield, Warehouse, Globe,
     Layers, Map as MapIcon, Eye,
-    TrendingUp, AlertTriangle, CheckCircle2, X
+    TrendingUp, AlertTriangle, CheckCircle2, X, Search
 } from 'lucide-react';
+import LocationSearch from './LocationSearch';
 
 // Fix for default Leaflet marker icons
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -108,7 +109,7 @@ const TractorMarker = ({ userPos }) => {
     );
 };
 
-const GpsMap = ({ activeTrack = null, className = "" }) => {
+const GpsMap = ({ activeTrack = null, className = "", externalCenter = null, onLocationChange = null }) => {
     const [scannedPoints, setScannedPoints] = useState([]);
     const [isPinging, setIsPinging] = useState(true);
     const [activeLayer, setActiveLayer] = useState('satellite'); // satellite, soil, government
@@ -118,13 +119,34 @@ const GpsMap = ({ activeTrack = null, className = "" }) => {
     const [userLocation, setUserLocation] = useState({ lat: 20.2961, lng: 85.8245, name: 'Bhubaneswar' }); // Default to BBSR
     const [locating, setLocating] = useState(false);
 
+    // Sync with external center if provided
+    useEffect(() => {
+        if (externalCenter) {
+            setUserLocation(prev => ({
+                ...prev,
+                lat: externalCenter.lat,
+                lng: externalCenter.lng,
+                name: externalCenter.name || prev.name
+            }));
+        }
+    }, [externalCenter]);
+
+    // Notify parent if location changes internally (e.g., general map search)
+    useEffect(() => {
+        if (onLocationChange) {
+            onLocationChange(userLocation);
+        }
+    }, [userLocation, onLocationChange]);
+
     useEffect(() => {
         const interval = setInterval(() => {
             setIsPinging(prev => !prev);
         }, 2000);
 
-        // Auto-locate on mount
-        handleLocate();
+        // Auto-locate on mount if no external center
+        if (!externalCenter) {
+            handleLocate();
+        }
 
         return () => clearInterval(interval);
     }, []);
@@ -191,9 +213,22 @@ const GpsMap = ({ activeTrack = null, className = "" }) => {
                 <div className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 backdrop-blur-md px-4 py-2 rounded-xl text-white text-[10px] font-black uppercase tracking-widest border border-white/20 shadow-lg pointer-events-auto">
                     <Signal className="w-3 h-3 animate-pulse" /> Gov Services Active
                 </div>
+                
+                {/* Real-time Map Search */}
+                <div className="w-full md:w-[300px] pointer-events-auto">
+                    <LocationSearch 
+                        placeholder="Jump to village/mandi..." 
+                        onSelect={(item) => {
+                            setUserLocation({ lat: item.lat, lng: item.lng, name: item.name });
+                        }}
+                        icon={Search}
+                        className="shadow-xl"
+                    />
+                </div>
+
                 <button
                     onClick={handleLocate}
-                    className="flex items-center gap-2 bg-black/70 backdrop-blur-md px-4 py-2 rounded-xl text-white text-[10px] font-black uppercase tracking-widest border border-white/10 hover:bg-black/90 transition-colors pointer-events-auto"
+                    className="flex items-center gap-2 bg-black/70 backdrop-blur-md px-4 py-2 rounded-xl text-white text-[10px] font-black uppercase tracking-widest border border-white/10 hover:bg-black/90 transition-colors pointer-events-auto shadow-lg"
                 >
                     <Wifi className={`w-3 h-3 text-blue-400 ${locating ? 'animate-spin' : ''}`} />
                     {locating ? 'Locating...' : `GPS: ${userLocation.lat.toFixed(4)}°N, ${userLocation.lng.toFixed(4)}°E`}

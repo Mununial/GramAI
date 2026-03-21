@@ -14,12 +14,13 @@ import {
     Filter,
     FileText
 } from 'lucide-react';
-import { transactions } from '../data/mockDB';
 import { toast } from 'react-toastify';
 import { jsPDF } from 'jspdf';
 
+import { useWallet } from '../context/WalletContext';
+
 const Wallet = () => {
-    const [balance, setBalance] = useState(12450);
+    const { balance, transactions: contextTransactions, addFunds } = useWallet();
     const [showAddMoney, setShowAddMoney] = useState(false);
     const [amount, setAmount] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
@@ -31,10 +32,9 @@ const Wallet = () => {
         setTimeout(() => {
             setIsProcessing(true);
             setTimeout(() => {
-                setBalance(prev => prev + Number(amount));
+                addFunds(Number(amount), 'Wallet Refill (Razorpay)');
                 setPaymentStep(3);
                 setIsProcessing(false);
-                toast.success('Funds added successfully!');
             }, 3000);
         }, 1000);
     };
@@ -131,23 +131,23 @@ const Wallet = () => {
                     </div>
 
                     <div className="space-y-4 overflow-y-auto max-h-[600px] pr-2">
-                        {transactions.map((tx) => (
+                        {contextTransactions.map((tx) => (
                             <div key={tx.id} className="flex items-center justify-between p-5 bg-slate-50 dark:bg-slate-800/50 rounded-[28px] hover:bg-slate-100 dark:hover:bg-slate-800 transition-all group">
                                 <div className="flex items-center gap-4">
-                                    <div className={`p-3 rounded-2xl ${tx.type === 'Credit' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                                        {tx.type === 'Credit' ? <ArrowDownLeft className="w-6 h-6" /> : <ArrowUpRight className="w-6 h-6" />}
+                                    <div className={`p-3 rounded-2xl ${tx.type === 'credit' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                                        {tx.type === 'credit' ? <ArrowDownLeft className="w-6 h-6" /> : <ArrowUpRight className="w-6 h-6" />}
                                     </div>
                                     <div>
-                                        <h5 className="font-bold">{tx.description}</h5>
+                                        <h5 className="font-bold">{tx.title}</h5>
                                         <p className="text-xs text-slate-500">{new Date(tx.date).toLocaleDateString()} • {tx.id}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-6">
                                     <div className="text-right">
-                                        <p className={`text-lg font-black ${tx.type === 'Credit' ? 'text-green-600' : 'text-red-600'}`}>
-                                            {tx.type === 'Credit' ? '+' : '-'}₹{Math.abs(tx.amount)}
+                                        <p className={`text-lg font-black ${tx.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
+                                            {tx.type === 'credit' ? '+' : '-'}₹{Math.abs(tx.amount)}
                                         </p>
-                                        <p className="text-[10px] font-bold uppercase text-slate-400">{tx.status}</p>
+                                        <p className="text-[10px] font-bold uppercase text-slate-400">{tx.type}</p>
                                     </div>
                                     <button
                                         onClick={() => downloadReceipt(tx)}
